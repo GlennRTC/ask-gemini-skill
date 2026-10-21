@@ -10,7 +10,7 @@ die() { echo "error: $*" >&2; exit 1; }
 
 : "${ALEXA_SKILL_ID:?set ALEXA_SKILL_ID to the skill id (amzn1.ask.skill....)}"
 AWS_REGION="${AWS_REGION:?set AWS_REGION}"
-FUNCTION_NAME="${FUNCTION_NAME:-ask-gemini-skill}"
+FUNCTION_NAME="${FUNCTION_NAME:-voice-assistant-skill}"
 ROLE_NAME="${ROLE_NAME:-${FUNCTION_NAME}-role}"
 KEY_PARAM="${GEMINI_API_KEY_PARAM:-/ask-gemini/api-key}"
 LAMBDA_PYTHON="${LAMBDA_PYTHON:-3.13}"
@@ -99,8 +99,9 @@ ROLE_ARN="$(aws iam get-role --role-name "$ROLE_NAME" --query Role.Arn --output 
 
 # The log group exists, with retention, before any code can write to it.
 LOG_GROUP="/aws/lambda/${FUNCTION_NAME}"
-if ! exists aws logs describe-log-groups --log-group-name-prefix "$LOG_GROUP" \
-     --query 'logGroups[?logGroupName==`'"$LOG_GROUP"'`] | [0].logGroupName' --output text | grep -qx "$LOG_GROUP"; then
+EXISTING_GROUP="$(aws logs describe-log-groups --log-group-name-prefix "$LOG_GROUP" \
+  --query "logGroups[?logGroupName=='${LOG_GROUP}'].logGroupName | [0]" --output text)"
+if [ "$EXISTING_GROUP" != "$LOG_GROUP" ]; then
   aws logs create-log-group --log-group-name "$LOG_GROUP"
 fi
 aws logs put-retention-policy --log-group-name "$LOG_GROUP" --retention-in-days "$LOG_RETENTION_DAYS"

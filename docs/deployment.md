@@ -24,12 +24,12 @@ Set the endpoint of the skill (default region) to the ARN printed by the script,
 
 ## Rollback
 ```bash
-aws lambda list-versions-by-function --function-name ask-gemini-skill --query 'Versions[].Version'
-aws lambda update-alias --function-name ask-gemini-skill --name live --function-version <previous>
+aws lambda list-versions-by-function --function-name voice-assistant-skill --query 'Versions[].Version'
+aws lambda update-alias --function-name voice-assistant-skill --name live --function-version <previous>
 ```
 
 ## Notes
-- Only the alias `live` may be invoked by Alexa. A skill endpoint that points at the unqualified function ARN will stop working, and the script only warns if the function has an older resource policy: review it with `aws lambda get-policy --function-name ask-gemini-skill` and remove stale statements by hand.
+- Only the alias `live` may be invoked by Alexa. A skill endpoint that points at the unqualified function ARN will stop working, and the script only warns if the function has an older resource policy: review it with `aws lambda get-policy --function-name voice-assistant-skill` and remove stale statements by hand.
 - Rolling back the alias restores the old code and environment variables, but not the IAM policy (the role is shared). Published versions are never pruned; delete old ones by hand.
 - Do not enable DEBUG logging for `ask_sdk`, `httpx` or `google.genai`: it could write the question into CloudWatch.
 - The first deploy must confirm the `python3.13` runtime, the `kms:Decrypt` condition and cold-start latency (the SSM read happens on the first request).
