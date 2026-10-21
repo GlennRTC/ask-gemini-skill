@@ -1,0 +1,45 @@
+{
+  "interactionModel": {
+    "languageModel": {
+      "invocationName": "consulta inteligente",
+      "intents": [
+        {
+          "name": "AMAZON.CancelIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.HelpIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.StopIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.FallbackIntent",
+          "samples": []
+        },
+        {
+          "name": "AskGeminiIntent",
+          "slots": [
+            {
+              "name": "query",
+              "type": "AMAZON.SearchQuery"
+            }
+          ],
+          "samples": [
+            "pregunta {query}",
+            "dime {query}",
+            "quiero saber {query}",
+            "investiga {query}",
+            "cuéntame {query}",
+            "consulta {query}",
+            "explícame {query}",
+            "busca {query}"
+          ]
+        }
+      ],
+      "types": []
+    }
+  }
+}

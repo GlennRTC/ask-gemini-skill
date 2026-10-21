@@ -21,3 +21,11 @@
 **Verificación realizada:** `./scripts/init.sh` ejecutado; no hay código ni tests aún.
 **Estado al cerrar:** N/A — solo setup
 **Pendiente para la próxima sesión:** Empezar por F001 y F002 (P0). Antes de F002/F003, aprobar dependencias (ask-sdk-core, SDK de Gemini) y escribir los ADR de F003, F004 y F011.
+
+## 2026-10-20 — Sesión 1
+**Feature(s) trabajada(s):** F001 — Interaction model y manifest de la skill
+**Qué se hizo:** Se eligió F001 por ser P0, sin dependencias externas ni revisión de seguridad. Se crearon `skill-package/skill.json` y los tres modelos de interacción (es-US, es-ES, en-US) con `AskGeminiIntent` (slot `query` de tipo `AMAZON.SearchQuery`, todas las muestras con carrier phrase) y los intents built-in. Invocation names provisionales: "consulta inteligente" / "smart answers", evitando la marca Gemini por las reglas de certificación de Alexa.
+**Verificación realizada:** `python3 -m unittest discover -s tests` (4 tests OK) y `./scripts/init.sh` sin errores. No se validó con ask CLI (no instalado).
+**Estado al cerrar:** F001 passing (validación estructural; falta el validador oficial).
+**Pendiente para la próxima sesión:** F002 (handler Lambda; requiere aprobar `ask-sdk-core`). Confirmar invocation names y validar el modelo con ask CLI cuando se instale.
+**Commit:** feat(skill): add interaction models and manifest (F001)

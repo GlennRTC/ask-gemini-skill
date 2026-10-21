@@ -1,0 +1,50 @@
+{
+  "manifest": {
+    "manifestVersion": "1.0",
+    "publishingInformation": {
+      "locales": {
+        "es-US": {
+          "name": "Consulta Inteligente",
+          "summary": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
+          "description": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
+          "examplePhrases": [
+            "Alexa, open consulta inteligente"
+          ]
+        },
+        "es-ES": {
+          "name": "Consulta Inteligente",
+          "summary": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
+          "description": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
+          "examplePhrases": [
+            "Alexa, open consulta inteligente"
+          ]
+        },
+        "en-US": {
+          "name": "Smart Answers",
+          "summary": "Ask Gemini questions by voice and hear the answer.",
+          "description": "Ask Gemini questions by voice and hear the answer.",
+          "examplePhrases": [
+            "Alexa, open smart answers"
+          ]
+        }
+      },
+      "isAvailableWorldwide": false,
+      "testingInstructions": "Say a question after the invocation phrase.",
+      "category": "KNOWLEDGE_AND_TRIVIA",
+      "distributionCountries": [
+        "US",
+        "ES"
+      ]
+    },
+    "apis": {
+      "custom": {}
+    },
+    "privacyAndCompliance": {
+      "allowsPurchases": false,
+      "usesPersonalInfo": false,
+      "isChildDirected": false,
+      "isExportCompliant": true,
+      "containsAds": false
+    }
+  }
+}

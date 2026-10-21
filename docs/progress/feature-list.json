@@ -12,11 +12,11 @@
         "AskGeminiIntent tiene sample utterances con slot query de tipo AMAZON.SearchQuery en los 3 locales",
         "Incluye intents built-in AMAZON.HelpIntent, StopIntent, CancelIntent y FallbackIntent"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P0",
       "requires_security_review": false,
       "requires_architecture_decision": false,
-      "notes": ""
+      "notes": "Verified with structural unit tests (tests/test_interaction_model.py), not the official ask CLI validator (not installed). Invocation names are provisional; avoid the Gemini trademark for certification (see F012)."
     },
     {
       "id": "F002",
