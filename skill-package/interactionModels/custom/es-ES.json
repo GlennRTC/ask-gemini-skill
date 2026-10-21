@@ -35,7 +35,13 @@
             "cuéntame {query}",
             "consulta {query}",
             "explícame {query}",
-            "busca {query}"
+            "busca {query}",
+            "qué {query}",
+            "quién {query}",
+            "cuándo {query}",
+            "cuántos {query}",
+            "cuánto {query}",
+            "por qué {query}"
           ]
         }
       ],
