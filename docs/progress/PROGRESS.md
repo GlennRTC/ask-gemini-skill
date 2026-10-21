@@ -69,3 +69,11 @@
 **Estado al cerrar:** F009 sigue failing: falta una ejecución real del workflow. Requiere push, que necesita aprobación explícita.
 **Pendiente para la próxima sesión:** Pedir aprobación de push, ver el resultado de CI y marcar F009 (y revisar F013). Siguen F007 y F010.
 **Commit:** ci: add verify script and GitHub Actions workflow (F009)
+
+## 2026-10-21 — Sesión 7
+**Feature(s) trabajada(s):** F009 — verificación en CI (cierre); F013 (avance)
+**Qué se hizo:** Con aprobación del usuario se hizo push de `chore/initialize-harness`. El workflow no se disparaba (solo PR y push a `main`, y `main` no existe en el remoto), así que se cambió el trigger a cualquier push (commit `d8d8fd2`).
+**Verificación realizada:** `gh run view`: run 39535505395 success; 34 tests OK y pip-audit sin vulnerabilidades, ejecutados por `./scripts/verify.sh` en GitHub Actions.
+**Estado al cerrar:** F009 passing. F013 failing: falta evaluar un lockfile con hashes.
+**Pendiente para la próxima sesión:** F007, F010. Crear `main` en el remoto antes de abrir PRs.
+**Commit:** docs(progress): record green CI run (F009)
