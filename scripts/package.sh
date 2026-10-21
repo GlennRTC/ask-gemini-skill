@@ -14,7 +14,7 @@ rm -rf build/lambda
 mkdir -p build/lambda
 
 "$PIP" -m pip install --quiet --no-compile --platform "$LAMBDA_PLATFORM" --implementation cp \
-  --python-version "$LAMBDA_PYTHON" --only-binary=:all: --target build/lambda -r requirements.txt
+  --python-version "$LAMBDA_PYTHON" --only-binary=:all: --require-hashes --target build/lambda -r requirements.txt
 # Only .py files: nothing else in skill/ (such as a stray .env) may reach the zip.
 mkdir build/lambda/skill
 cp skill/*.py build/lambda/skill/
