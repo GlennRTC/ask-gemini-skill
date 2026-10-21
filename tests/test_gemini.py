@@ -9,6 +9,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import httpx  # noqa: E402
 from google.genai import errors  # noqa: E402
 
+from skill import gemini  # noqa: E402
 from skill.gemini import GeminiError, ask_gemini  # noqa: E402
 
 
@@ -37,6 +38,16 @@ class AskGeminiTest(unittest.TestCase):
         ask_gemini("a" * 5000, "en-US", client=client)
         self.assertEqual(len(call.kwargs["contents"]), 500)
         self.assertEqual(call.kwargs["config"].max_output_tokens, 300)
+
+    def test_client_timeout_is_client_side_only(self):
+        # A server-side deadline under 10 s is rejected by the API with HTTP 400.
+        gemini._client = None
+        self.addCleanup(setattr, gemini, "_client", None)
+        with mock.patch.object(gemini.genai, "Client") as client_cls:
+            gemini._get_client("synthetic", 6.0)
+        options = client_cls.call_args.kwargs["http_options"]
+        self.assertIsNone(options.timeout)
+        self.assertEqual(options.client_args, {"timeout": 6.0})
 
     def test_prompt_follows_locale_language(self):
         for locale, word in (("es-ES", "español"), ("es-US", "español"), ("en-US", "English"), ("fr-FR", "English")):

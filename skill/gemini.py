@@ -34,8 +34,10 @@ _client = None
 def _get_client(api_key, timeout_s):
     global _client
     if _client is None:
+        # HttpOptions.timeout would send X-Server-Timeout, which the API rejects below 10 s
+        # (400), so the limit is enforced client-side through httpx.
         _client = genai.Client(
-            api_key=api_key, http_options=types.HttpOptions(timeout=int(timeout_s * 1000))
+            api_key=api_key, http_options=types.HttpOptions(client_args={"timeout": timeout_s})
         )
     return _client
 
