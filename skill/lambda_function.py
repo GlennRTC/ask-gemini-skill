@@ -67,7 +67,7 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         except (GeminiError, SecretError) as exc:
             # Log only the error kind: the query may hold personal data.
             kind = getattr(exc, "kind", type(exc).__name__)
-            logger.warning("gemini_failure kind=%s", kind)
+            logger.warning("gemini_failure kind=%s status=%s", kind, getattr(exc, "status", None))
             message = m.get(f"error_{kind}", m["error"])
             return rb.speak(message).ask(message).response
         spoken = to_speech(answer)

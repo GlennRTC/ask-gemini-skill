@@ -58,6 +58,7 @@ class AskGeminiTest(unittest.TestCase):
                 with self.assertRaises(GeminiError) as ctx:
                     ask_gemini("x", "en-US", client=client)
                 self.assertEqual(ctx.exception.kind, kind)
+                self.assertEqual(ctx.exception.status, code)
 
     def test_server_error_maps_to_api(self):
         client, _ = fake_client(exc=errors.ServerError(500, {"error": {"message": "m"}}))

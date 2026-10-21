@@ -22,9 +22,10 @@ SYSTEM_PROMPTS = {
 class GeminiError(Exception):
     """kind is one of: timeout, quota, blocked, api."""
 
-    def __init__(self, kind):
+    def __init__(self, kind, status=None):
         super().__init__(kind)
         self.kind = kind
+        self.status = status  # HTTP status from the API when known; safe to log
 
 
 _client = None
@@ -58,9 +59,9 @@ def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEO
     except (httpx.TimeoutException, TimeoutError):
         raise GeminiError("timeout") from None
     except errors.ClientError as exc:
-        raise GeminiError("quota" if exc.code == 429 else "api") from None
-    except errors.APIError:
-        raise GeminiError("api") from None
+        raise GeminiError("quota" if exc.code == 429 else "api", exc.code) from None
+    except errors.APIError as exc:
+        raise GeminiError("api", getattr(exc, "code", None)) from None
 
     feedback = getattr(response, "prompt_feedback", None)
     if feedback is not None and getattr(feedback, "block_reason", None):
