@@ -8,7 +8,8 @@
           "summary": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
           "description": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
           "examplePhrases": [
-            "Alexa, open consulta inteligente"
+            "Alexa, abre consulta inteligente",
+            "Alexa, pregunta a consulta inteligente quién escribió Don Quijote"
           ]
         },
         "es-ES": {
@@ -16,7 +17,8 @@
           "summary": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
           "description": "Hazle preguntas a Gemini por voz y escucha la respuesta.",
           "examplePhrases": [
-            "Alexa, open consulta inteligente"
+            "Alexa, abre consulta inteligente",
+            "Alexa, pregunta a consulta inteligente quién escribió Don Quijote"
           ]
         },
         "en-US": {
@@ -24,12 +26,13 @@
           "summary": "Ask Gemini questions by voice and hear the answer.",
           "description": "Ask Gemini questions by voice and hear the answer.",
           "examplePhrases": [
-            "Alexa, open smart answers"
+            "Alexa, open smart answers",
+            "Alexa, ask smart answers who wrote Don Quixote"
           ]
         }
       },
       "isAvailableWorldwide": false,
-      "testingInstructions": "Say a question after the invocation phrase.",
+      "testingInstructions": "No account linking or purchases. Say 'Alexa, open smart answers' (es-US/es-ES: 'Alexa, abre consulta inteligente'), then ask any general question, for example 'who wrote Don Quixote'. The skill answers by voice and asks if you want another question; say no to exit. Answers come from a generative AI model and need internet access.",
       "category": "KNOWLEDGE_AND_TRIVIA",
       "distributionCountries": [
         "US",
