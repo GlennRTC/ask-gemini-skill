@@ -61,3 +61,11 @@
 **Estado al cerrar:** F006 passing. F013 sigue failing (falta paso de CI y evaluar lockfile con hashes).
 **Pendiente para la próxima sesión:** F007, F009 (CI con tests y pip-audit), F010. Medir latencia real en Lambda.
 **Commit:** feat(skill): localized error kinds and catch-all handler (F006)
+
+## 2026-10-20 — Sesión 6
+**Feature(s) trabajada(s):** F009 — Suite de tests y comando de verificación en CI
+**Qué se hizo:** `scripts/verify.sh` es ahora el único comando de verificación (unittest + pip-audit). `init.sh` y el nuevo `.github/workflows/ci.yml` lo invocan, así que local y CI no pueden divergir. `AGENTS.md` lo documenta.
+**Verificación realizada:** `./scripts/init.sh` completo (34 tests OK, pip-audit sin vulnerabilidades). El workflow NO se ha ejecutado en GitHub.
+**Estado al cerrar:** F009 sigue failing: falta una ejecución real del workflow. Requiere push, que necesita aprobación explícita.
+**Pendiente para la próxima sesión:** Pedir aprobación de push, ver el resultado de CI y marcar F009 (y revisar F013). Siguen F007 y F010.
+**Commit:** ci: add verify script and GitHub Actions workflow (F009)

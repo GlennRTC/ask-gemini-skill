@@ -142,7 +142,7 @@
       "priority": "P1",
       "requires_security_review": false,
       "requires_architecture_decision": false,
-      "notes": ""
+      "notes": "scripts/verify.sh (unittest + pip-audit) is the single verification command; .github/workflows/ci.yml and init.sh both call it. Stays failing until the workflow has actually run on GitHub (needs a push/PR, which requires user approval). Action versions use major tags (checkout@v4, setup-python@v5), python 3.14, unverified."
     },
     {
       "id": "F010",
@@ -202,7 +202,7 @@
       "priority": "P1",
       "requires_security_review": true,
       "requires_architecture_decision": false,
-      "notes": "Found by the F003/F004 security review. Adding pip-audit needs dependency approval. Partial: pip-audit==2.10.1 (Apache-2.0) approved and added to requirements-dev.txt (not requirements.txt, to keep it out of the Lambda package); init.sh and AGENTS.md run it. Still missing: the CI step (F009) and the hashes lockfile evaluation, so status stays failing."
+      "notes": "Found by the F003/F004 security review. Adding pip-audit needs dependency approval. Partial: pip-audit==2.10.1 (Apache-2.0) approved and added to requirements-dev.txt (not requirements.txt, to keep it out of the Lambda package); init.sh and AGENTS.md run it. Still missing: the CI step (F009) and the hashes lockfile evaluation, so status stays failing. CI step now exists in ci.yml via verify.sh but has not run yet; lockfile with hashes still not evaluated."
     }
   ]
 }

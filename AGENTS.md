@@ -54,8 +54,7 @@ Si estás retomando este proyecto sin contexto de una sesión anterior, sigue es
 
 ```bash
 # Verificación (mismo comando en CI)
-python3 -m unittest discover -s tests
-pip-audit -r requirements.txt   # requiere red; instalado vía requirements-dev.txt
+./scripts/verify.sh   # unittest + pip-audit (requiere red); es el mismo comando que corre CI
 
 # Entorno + smoke test end-to-end
 ./scripts/init.sh
