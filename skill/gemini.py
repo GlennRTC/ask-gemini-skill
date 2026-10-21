@@ -4,7 +4,7 @@ import httpx
 from google import genai
 from google.genai import errors, types
 
-DEFAULT_MODEL = "gemini-2.5-flash"  # override with GEMINI_MODEL; verify availability before release
+DEFAULT_MODEL = "gemini-3.5-flash-lite"  # override with GEMINI_MODEL; older 2.5 models 404 for new users
 # Alexa cuts the request at about 8 s, so the call must give up before that.
 DEFAULT_TIMEOUT_S = 6.0
 MAX_ANSWER_WORDS = 60
