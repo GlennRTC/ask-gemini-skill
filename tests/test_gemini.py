@@ -69,6 +69,20 @@ class AskGeminiTest(unittest.TestCase):
             ask_gemini("x", "en-US", client=client)
         self.assertEqual(ctx.exception.kind, "timeout")
 
+    def test_stalled_call_hits_the_hard_deadline(self):
+        import time
+
+        def stalled(**kwargs):
+            time.sleep(0.5)
+            return response("late")
+
+        client = SimpleNamespace(models=SimpleNamespace(generate_content=stalled))
+        started = time.monotonic()
+        with self.assertRaises(GeminiError) as ctx:
+            ask_gemini("x", "en-US", client=client, timeout_s=0.05)
+        self.assertEqual(ctx.exception.kind, "timeout")
+        self.assertLess(time.monotonic() - started, 0.3)
+
     def test_quota_and_api_errors(self):
         for code, kind in ((429, "quota"), (400, "api")):
             with self.subTest(code=code):

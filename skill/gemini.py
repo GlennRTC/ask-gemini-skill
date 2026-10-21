@@ -1,4 +1,5 @@
 import os
+from concurrent.futures import ThreadPoolExecutor
 
 import httpx
 from google import genai
@@ -68,16 +69,23 @@ def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEO
         system_instruction=instruction, max_output_tokens=MAX_OUTPUT_TOKENS,
         safety_settings=SAFETY_SETTINGS,
     )
+    # httpx timeouts apply per phase, not to the whole call, and a stalled call once ran into the
+    # Lambda limit; so the call also gets a hard wall-clock deadline in a worker thread.
+    executor = ThreadPoolExecutor(max_workers=1)
     try:
-        response = client.models.generate_content(
-            model=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL), contents=query[:MAX_QUERY_CHARS], config=config
+        future = executor.submit(
+            client.models.generate_content,
+            model=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL), contents=query[:MAX_QUERY_CHARS], config=config,
         )
+        response = future.result(timeout=timeout_s)
     except (httpx.TimeoutException, TimeoutError):
         raise GeminiError("timeout") from None
     except errors.ClientError as exc:
         raise GeminiError("quota" if exc.code == 429 else "api", exc.code) from None
     except errors.APIError as exc:
         raise GeminiError("api", getattr(exc, "code", None)) from None
+    finally:
+        executor.shutdown(wait=False, cancel_futures=True)
 
     feedback = getattr(response, "prompt_feedback", None)
     if feedback is not None and getattr(feedback, "block_reason", None):
