@@ -5,8 +5,8 @@ from google import genai
 from google.genai import errors, types
 
 DEFAULT_MODEL = "gemini-3.5-flash-lite"  # override with GEMINI_MODEL; older 2.5 models 404 for new users
-# Alexa cuts the request at about 8 s, so the call must give up before that.
-DEFAULT_TIMEOUT_S = 6.0
+# Alexa cuts the request at about 8 s; a cold start can take ~2 s before this call, so give up at 4.5 s.
+DEFAULT_TIMEOUT_S = 4.5
 MAX_ANSWER_WORDS = 60
 MAX_QUERY_CHARS = 500
 MAX_OUTPUT_TOKENS = 300  # hard cap; the prompt's word limit alone can be ignored

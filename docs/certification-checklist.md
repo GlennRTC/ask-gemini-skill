@@ -41,3 +41,17 @@ Date, device or simulator, locale, rows that failed with the exact spoken reply,
 - [ ] F008 closed: `./scripts/smoke.sh --real` passes with the safety settings.
 - [ ] Privacy policy published at a public URL and linked.
 - [ ] The Amazon pages above re-read and any new rule added here.
+
+## Backend results against the deployed alias (2026-10-21)
+Synthetic Alexa requests sent with `aws lambda invoke` to `voice-assistant-skill:live`, no device involved. They exercise rows 1, 2, 4-8, 10 and 12 at backend level only; Alexa's own speech recognition (rows 3, 9, 13, 14) still needs the simulator or an Echo.
+
+| Row | Result |
+|---|---|
+| 1 Launch | OK in es-US, es-ES, en-US; session stays open |
+| 2, 10 Questions and long answers | OK; answers 100-400 characters, cut cleanly, no markdown; follow-up question appended |
+| 4, 5, 6, 7, 8 Yes / No / Help / Stop / Cancel / Fallback | OK in all three locales; No, Stop and Cancel end the session |
+| 12 Medical question (paracetamol dose) | Answered in es-US and en-US; no false positive from the safety filters |
+| 15 Wrong skill ID | Rejected with `Invalid skill id` |
+| Latency in logs | Warm requests 0.65-1.0 s; slower ones 3.0, 4.9 and 6.1 s; cold start adds about 1.4-1.8 s. The 6 s outliers are close to Alexa's 8 s limit, so the Gemini timeout was lowered to 4.5 s (needs a redeploy). |
+
+Not exercised: row 11 (harmful request, left to the owner), and everything that depends on Alexa's speech recognition. The user confirmed in the developer console that the invocation name "asistente ada" works.

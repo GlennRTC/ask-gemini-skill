@@ -14,7 +14,7 @@ An Alexa custom skill that takes a spoken question, sends it to Google Gemini an
 ## How it works
 
 1. `AskGeminiIntent` receives the question in an `AMAZON.SearchQuery` slot.
-2. `skill/gemini.py` calls Gemini (SDK `google-genai`) with a short-voice system prompt, safety filters, a 500-character input cap, a 300-token output cap and a 6 s client-side timeout (Alexa gives up at about 8 s).
+2. `skill/gemini.py` calls Gemini (SDK `google-genai`) with a short-voice system prompt, safety filters, a 500-character input cap, a 300-token output cap and a 4.5 s client-side timeout (Alexa gives up at about 8 s).
 3. `skill/speech.py` strips markdown and URLs, truncates at a sentence boundary and escapes SSML.
 4. Failures (timeout, quota, blocked content, API error) get distinct spoken messages.
 
