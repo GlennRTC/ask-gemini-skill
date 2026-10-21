@@ -6,3 +6,11 @@ __pycache__/
 !.env.example
 *.zip
 .claude/settings.local.json
+
+# Claude Code harness (local working files, not part of the product)
+.claude/
+AGENTS.md
+CLAUDE.md
+docs/AGENT_TEAM.md
+docs/progress/
+docs/adr/ADR-000-template.md
