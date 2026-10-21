@@ -12,7 +12,7 @@
 
 ## What the skill stores
 - Nothing about your questions or answers. The skill has no database and keeps no conversation history; each question is independent.
-- Logs record only metadata: locale, answer length, response time and error type. They never include the question or the answer. AWS keeps these logs according to its CloudWatch retention setting (TODO: set an explicit retention period in F011).
+- Logs record only metadata: locale, answer length, response time and error type. They never include the question or the answer. AWS keeps these logs according to its CloudWatch retention setting (14 days, set by `scripts/deploy.sh`).
 - The skill does not request or use your name, email, address or device location.
 
 ## Third parties
