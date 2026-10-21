@@ -38,7 +38,7 @@
         }
       },
       "isAvailableWorldwide": false,
-      "testingInstructions": "No account linking or purchases. Say 'Alexa, open assistant ada' (es-US/es-ES: 'Alexa, abre asistente ada'), then ask any general question, for example 'who wrote Don Quixote'. The skill answers by voice and asks if you want another question; say no to exit. Answers come from a generative AI model and need internet access.",
+      "testingInstructions": "No account linking or purchases. Say 'Alexa, open assistant ada' (es-US/es-ES: 'Alexa, abre asistente ada'), then ask any general question, for example 'who wrote Don Quixote'. The skill answers by voice and asks if you want another question; say no to exit. Answers come from a generative AI model and need internet access. Optional permission: country and postal code, used only for questions about nearby places ('restaurantes cerca de mí'); without it the skill answers generically and sends a consent card.",
       "category": "KNOWLEDGE_AND_TRIVIA",
       "distributionCountries": [
         "US",
@@ -50,10 +50,15 @@
     },
     "privacyAndCompliance": {
       "allowsPurchases": false,
-      "usesPersonalInfo": false,
+      "usesPersonalInfo": true,
       "isChildDirected": false,
       "isExportCompliant": true,
       "containsAds": false
-    }
+    },
+    "permissions": [
+      {
+        "name": "read::alexa:device:all:address:country_and_postal_code"
+      }
+    ]
   }
 }

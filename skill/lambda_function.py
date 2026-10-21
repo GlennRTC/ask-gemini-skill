@@ -5,8 +5,10 @@ import time
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler, AbstractRequestHandler
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.utils import is_intent_name, is_request_type
+from ask_sdk_model.ui import AskForPermissionsConsentCard
 
-from . import context
+from . import context, location
+from .gemini import DEFAULT_TIMEOUT_S as GEMINI_TIMEOUT_S
 from .gemini import GeminiError, ask_gemini
 from .guardrails import DISCLAIMERS, HEALTH_PROMPTS, classify, emergency_message
 from .secrets import SecretError
@@ -15,6 +17,9 @@ from .voice import VoiceInterceptor
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+# Location lookup plus model call must leave room for a cold start inside Alexa's ~8 s.
+LOCATION_TOTAL_BUDGET_S = 5.5
 
 # Spoken strings per language; unknown locales fall back to English.
 MESSAGES = {
@@ -82,12 +87,25 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         if topic is None and context.has_health_turn(previous):
             topic = "health"  # a health question still inside the window keeps the guardrail
         started = time.monotonic()
+        instructions = []
+        if topic == "health":
+            instructions.append(HEALTH_PROMPTS[lang])
+        place_status, postal = None, None
+        if location.is_place_question(query, locale):
+            place_status, country, postal = location.postal_code(handler_input.request_envelope)
+            logger.info("location status=%s", place_status)  # never the code itself
+            if place_status == "ok":
+                instructions.append(location.prompt(locale, country, postal))
         try:
             options = {}
-            if topic == "health":
-                options["extra_instruction"] = HEALTH_PROMPTS[lang]
+            if instructions:
+                options["extra_instruction"] = " ".join(instructions)
             if previous:
                 options["history"] = previous
+            if place_status is not None:
+                # The location lookup already spent part of the time Alexa allows.
+                spent = time.monotonic() - started
+                options["timeout_s"] = max(2.5, min(GEMINI_TIMEOUT_S, LOCATION_TOTAL_BUDGET_S - spent))
             answer = ask_gemini(query, locale, **options)
         except (GeminiError, SecretError) as exc:
             # Log only the error kind: the query may hold personal data.
@@ -102,9 +120,13 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         if not spoken:
             return rb.speak(m["error"]).ask(m["error"]).response
         # Only a genuine health question is marked; inherited ones must not keep the guard alive forever.
-        context.remember(session, query, answer, health=raw_topic == "health")
+        # The model is told not to repeat the postal code; scrub it anyway before it is replayed.
+        context.remember(session, query, location.scrub(answer, postal), health=raw_topic == "health")
         if topic == "health":
             spoken = f"{spoken} {DISCLAIMERS[lang]}"
+        if place_status == "denied":
+            rb.set_card(AskForPermissionsConsentCard(permissions=[location.PERMISSION]))
+            spoken = f"{spoken} {location.permission_note(locale)}"
         return rb.speak(f"{spoken} {m['more']}").ask(m["more"]).response
 
 

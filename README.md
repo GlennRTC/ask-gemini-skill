@@ -18,7 +18,8 @@ An Alexa custom skill that takes a spoken question, sends it to Google Gemini an
 3. `skill/speech.py` strips markdown and URLs, truncates at a sentence boundary and escapes SSML.
 4. Failures (timeout, quota, blocked content, API error) get distinct spoken messages.
 5. Voice: every response is spoken with an Amazon Polly voice per locale (`skill/voice.py`: es-US Miguel, es-ES Enrique, en-US Matthew; an empty value keeps Alexa's voice).
-6. Guardrails (`skill/guardrails.py`): questions about suicide, self-harm or overdose get a fixed emergency message and never reach the model; health questions (doses, medication, symptoms) add a prompt rule against personal dosing or diagnosis plus a spoken disclaimer. They are keyword lists, so paraphrases can slip through.
+6. Location: questions about the user's surroundings ("cerca de mí", "nearby", "my area") read the device country and postal code through the Alexa Device Address API (permission `country_and_postal_code` only) and pass it to the model. Without permission the skill sends a consent card to the Alexa app. There is no real-time data, so suggestions come from the model's general knowledge.
+7. Guardrails (`skill/guardrails.py`): questions about suicide, self-harm or overdose get a fixed emergency message and never reach the model; health questions (doses, medication, symptoms) add a prompt rule against personal dosing or diagnosis plus a spoken disclaimer. They are keyword lists, so paraphrases can slip through.
 
 ## Layout
 
