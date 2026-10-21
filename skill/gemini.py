@@ -53,7 +53,20 @@ def _get_client(api_key, timeout_s):
     return _client
 
 
-def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEOUT_S, extra_instruction=None):
+def _contents(query, history):
+    current = query[:MAX_QUERY_CHARS]
+    if not history:
+        return current
+    turns = []
+    for turn in history:
+        turns.append(types.Content(role="user", parts=[types.Part(text=turn["q"][:MAX_QUERY_CHARS])]))
+        turns.append(types.Content(role="model", parts=[types.Part(text=turn["a"])]))
+    turns.append(types.Content(role="user", parts=[types.Part(text=current)]))
+    return turns
+
+
+def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEOUT_S, extra_instruction=None,
+               history=None):
     if client is None:
         if api_key is None:
             from .secrets import get_gemini_api_key
@@ -75,7 +88,7 @@ def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEO
     try:
         future = executor.submit(
             client.models.generate_content,
-            model=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL), contents=query[:MAX_QUERY_CHARS], config=config,
+            model=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL), contents=_contents(query, history), config=config,
         )
         response = future.result(timeout=timeout_s)
     except (httpx.TimeoutException, TimeoutError):

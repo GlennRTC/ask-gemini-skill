@@ -8,7 +8,7 @@ An Alexa custom skill that takes a spoken question, sends it to Google Gemini an
 ```
 
 - **Locales:** es-US, es-ES, en-US (invocation names "asistente ada" and "assistant ada", provisional).
-- **Stateless:** every question is independent. The skill has no database and keeps no history.
+- **Short-term context:** the last few turns of the current session are replayed to the model so follow-ups work ("and when was he born?"). They live only in Alexa's session attributes: the skill has no database and nothing survives the session.
 - **Privacy:** logs hold only locale, answer length, latency and error type, never the question or the answer. See `docs/privacy-policy.md` (draft).
 
 ## How it works
@@ -40,6 +40,7 @@ requirements-dev.txt    Adds pip-audit
 | `GEMINI_API_KEY` | API key for local development; takes precedence over SSM. |
 | `GEMINI_MODEL` | Optional. Defaults to `gemini-3.5-flash-lite`. |
 | `SPEECH_MAX_CHARS` | Optional. Maximum spoken answer length, default 600. |
+| `CONTEXT_TURNS` | Optional. Previous question/answer pairs sent to the model within one Alexa session (default 4, `0` turns the context off). The default lives in `skill/context.py`. |
 | `ALLOW_NO_SKILL_ID=1` | Local runs only: skips the skill ID check. |
 
 The API key is never logged or printed. Do not paste it in commands or chats; enter it with `read -s GEMINI_API_KEY; export GEMINI_API_KEY`.

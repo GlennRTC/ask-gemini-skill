@@ -7,12 +7,13 @@
 - Your Alexa locale (for example es-US) to choose the answer language.
 
 ## Where it goes
-- The question text is sent to Google's Gemini API to generate the answer, which Alexa reads back to you.
+- The question text, together with the previous turns of the same session, is sent to Google's Gemini API to generate the answer, which Alexa reads back to you.
 - The skill runs on AWS Lambda. The API key is kept in AWS Systems Manager Parameter Store.
 
 ## What the skill stores
-- Nothing about your questions or answers. The skill has no database and keeps no conversation history; each question is independent.
-- Logs record only metadata: locale, answer length, response time and error type. They never include the question or the answer. AWS keeps these logs according to its CloudWatch retention setting (14 days, set by `scripts/deploy.sh`).
+- The skill has no database and writes nothing to disk. To understand follow-up questions, the last few questions and answers of the current Alexa session (4 by default) are kept in Alexa's session attributes and sent again to the model with each new question. Alexa, not the skill, controls how long session data lives and what Amazon retains under its own policy; the skill does not keep it after the session ends.
+- This includes health-related questions if you ask them. Do not say anything you would not want Google to receive.
+- Logs record only metadata: locale, topic category (for example "health"), answer length, response time and error type. They never include the question or the answer. AWS keeps these logs for 14 days (set by `scripts/deploy.sh`).
 - The skill does not request or use your name, email, address or device location.
 
 ## Third parties

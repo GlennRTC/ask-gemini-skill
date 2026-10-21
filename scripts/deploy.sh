@@ -16,6 +16,7 @@ KEY_PARAM="${GEMINI_API_KEY_PARAM:-/ask-gemini/api-key}"
 LAMBDA_PYTHON="${LAMBDA_PYTHON:-3.13}"
 LAMBDA_ARCH="${LAMBDA_ARCH:-x86_64}"
 LOG_RETENTION_DAYS="${LOG_RETENTION_DAYS:-14}"
+CONTEXT_TURNS="${CONTEXT_TURNS:-}"                 # optional override of the context window (0 turns it off)
 RESERVED_CONCURRENCY="${RESERVED_CONCURRENCY:-}"   # optional cap on parallel invocations
 HANDLER="skill.lambda_function.lambda_handler"
 ALIAS="live"
@@ -28,6 +29,7 @@ ALIAS="live"
 [[ $ROLE_NAME =~ ^[A-Za-z0-9_-]{1,64}$ ]] || die "bad ROLE_NAME"
 [[ $LAMBDA_PYTHON =~ ^3\.[0-9]+$ ]] || die "bad LAMBDA_PYTHON"
 [[ $LOG_RETENTION_DAYS =~ ^[0-9]+$ ]] || die "bad LOG_RETENTION_DAYS"
+[[ -z $CONTEXT_TURNS || $CONTEXT_TURNS =~ ^([0-9]|10)$ ]] || die "CONTEXT_TURNS must be 0-10"
 [[ -z $RESERVED_CONCURRENCY || $RESERVED_CONCURRENCY =~ ^[0-9]+$ ]] || die "bad RESERVED_CONCURRENCY"
 
 # One variable decides the architecture; the wheel platform is derived from it.
@@ -81,9 +83,11 @@ ACCOUNT_ID="$(aws sts get-caller-identity --query Account --output text)"
 sed -e "s|__REGION__|${AWS_REGION}|g" -e "s|__ACCOUNT_ID__|${ACCOUNT_ID}|g" \
   -e "s|__KEY_PARAM__|${KEY_PARAM}|g" -e "s|__FUNCTION_NAME__|${FUNCTION_NAME}|g" \
   infra/role-policy.json > "$TMP/role-policy.json"
-KEY_PARAM="$KEY_PARAM" python3 - "$TMP/env.json" <<'PY'
+KEY_PARAM="$KEY_PARAM" CONTEXT_TURNS="$CONTEXT_TURNS" python3 - "$TMP/env.json" <<'PY'
 import json, os, sys
 env = {"ALEXA_SKILL_ID": os.environ["ALEXA_SKILL_ID"], "GEMINI_API_KEY_PARAM": os.environ["KEY_PARAM"]}
+if os.environ.get("CONTEXT_TURNS"):
+    env["CONTEXT_TURNS"] = os.environ["CONTEXT_TURNS"]
 json.dump({"Variables": env}, open(sys.argv[1], "w"))
 PY
 

@@ -6,6 +6,7 @@ from ask_sdk_core.dispatch_components import AbstractExceptionHandler, AbstractR
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.utils import is_intent_name, is_request_type
 
+from . import context
 from .gemini import GeminiError, ask_gemini
 from .guardrails import DISCLAIMERS, HEALTH_PROMPTS, classify, emergency_message
 from .secrets import SecretError
@@ -69,17 +70,24 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         if not query:
             return rb.speak(m["fallback"]).ask(m["fallback"]).response
         locale = handler_input.request_envelope.request.locale
-        topic = classify(query, locale)
+        session = handler_input.attributes_manager.session_attributes
         lang = "es" if (locale or "").lower().startswith("es") else "en"
+        topic = classify(query, locale)
+        previous = context.recall(session)
         if topic == "emergency":
             logger.info("guardrail topic=emergency locale=%s", locale)
             return rb.speak(emergency_message(locale)).set_should_end_session(True).response
+        raw_topic = topic
+        if topic is None and context.has_health_turn(previous):
+            topic = "health"  # a health question still inside the window keeps the guardrail
         started = time.monotonic()
         try:
+            options = {}
             if topic == "health":
-                answer = ask_gemini(query, locale, extra_instruction=HEALTH_PROMPTS[lang])
-            else:
-                answer = ask_gemini(query, locale)
+                options["extra_instruction"] = HEALTH_PROMPTS[lang]
+            if previous:
+                options["history"] = previous
+            answer = ask_gemini(query, locale, **options)
         except (GeminiError, SecretError) as exc:
             # Log only the error kind: the query may hold personal data.
             kind = getattr(exc, "kind", type(exc).__name__)
@@ -92,7 +100,8 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         spoken = to_speech(answer)
         if not spoken:
             return rb.speak(m["error"]).ask(m["error"]).response
-        # Each question is independent (stateless v1); the follow-up only keeps the session open.
+        # Only a genuine health question is marked; inherited ones must not keep the guard alive forever.
+        context.remember(session, query, answer, health=raw_topic == "health")
         if topic == "health":
             spoken = f"{spoken} {DISCLAIMERS[lang]}"
         return rb.speak(f"{spoken} {m['more']}").ask(m["more"]).response
