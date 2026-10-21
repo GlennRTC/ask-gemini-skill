@@ -76,11 +76,11 @@
         "Respuestas largas se truncan en límite de oración a un máximo configurable de caracteres",
         "Tests con entradas markdown/SSML hostiles pasan"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P0",
       "requires_security_review": false,
       "requires_architecture_decision": false,
-      "notes": ""
+      "notes": "skill/speech.py to_speech(); max length via SPEECH_MAX_CHARS (default 600). Handler speaks the error message if the cleaned answer is empty."
     },
     {
       "id": "F006",

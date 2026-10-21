@@ -1,5 +1,4 @@
 import logging
-from xml.sax.saxutils import escape
 
 from ask_sdk_core.dispatch_components import AbstractRequestHandler
 from ask_sdk_core.skill_builder import SkillBuilder
@@ -7,6 +6,7 @@ from ask_sdk_core.utils import is_intent_name, is_request_type
 
 from .gemini import GeminiError, ask_gemini
 from .secrets import SecretError
+from .speech import to_speech
 
 logger = logging.getLogger(__name__)
 
@@ -62,7 +62,10 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
             # Log only the error kind: the query may hold personal data.
             logger.warning("gemini_failure kind=%s", getattr(exc, "kind", type(exc).__name__))
             return rb.speak(m["error"]).ask(m["error"]).response
-        return rb.speak(escape(answer)).ask(m["welcome_reprompt"]).response
+        spoken = to_speech(answer)
+        if not spoken:
+            return rb.speak(m["error"]).ask(m["error"]).response
+        return rb.speak(spoken).ask(m["welcome_reprompt"]).response
 
 
 class HelpIntentHandler(AbstractRequestHandler):

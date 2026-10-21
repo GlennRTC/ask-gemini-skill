@@ -45,3 +45,11 @@
 **Estado al cerrar:** F003 y F004 passing. Nueva F013 (pip-audit) en failing.
 **Pendiente para la próxima sesión:** Verificar el modelo por defecto con una key real; F005 (más limpieza de markdown/URLs y truncado por oración, el escape básico ya existe); trigger de Alexa con skill ID y empaquetado manylinux de cryptography/cffi en F011; `boto3` no está en requirements.txt.
 **Commit:** feat(skill): add Gemini client and SSM key loading (F003, F004)
+
+## 2026-10-20 — Sesión 4
+**Feature(s) trabajada(s):** F005 — Conversión de respuesta a voz
+**Qué se hizo:** `skill/speech.py` limpia markdown (encabezados, viñetas, énfasis, backticks, fences), conserva el texto de los enlaces, elimina URLs, trunca al final de la última oración completa (sin cortar decimales ni palabras) y escapa SSML al final, para que el límite cuente caracteres hablados. El handler usa `to_speech` en lugar del escape básico y dice el mensaje de error si queda vacío.
+**Verificación realizada:** `python3 -m unittest discover -s tests` (33 tests OK, incluidos casos markdown/SSML hostiles).
+**Estado al cerrar:** F005 passing.
+**Pendiente para la próxima sesión:** F006 (timeouts y ErrorHandler general) o F007 (sesión abierta; ya parcialmente cubierta por el reprompt). F013 espera aprobación explícita de pip-audit.
+**Commit:** feat(skill): clean and truncate answers for speech (F005)
