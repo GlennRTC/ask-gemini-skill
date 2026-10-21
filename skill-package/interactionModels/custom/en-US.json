@@ -35,7 +35,13 @@
             "explain {query}",
             "what is {query}",
             "search for {query}",
-            "find out {query}"
+            "find out {query}",
+            "what {query}",
+            "who {query}",
+            "when {query}",
+            "how many {query}",
+            "how much {query}",
+            "why {query}"
           ]
         }
       ],
