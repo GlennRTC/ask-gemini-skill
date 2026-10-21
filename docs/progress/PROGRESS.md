@@ -37,3 +37,11 @@
 **Estado al cerrar:** F002 passing.
 **Pendiente para la próxima sesión:** F003 (cliente Gemini + `AskGeminiIntent`) y F004 (API key), ambos con revisión de seguridad y ADR previo (SDK google-genai vs. HTTP; Secrets Manager vs. SSM). Todavía no hay ErrorHandler (F006).
 **Commit:** feat(skill): add base Alexa intent handlers (F002)
+
+## 2026-10-20 — Sesión 3
+**Feature(s) trabajada(s):** F003 — Cliente Gemini; F004 — API key en SSM (acopladas, por pedido del usuario)
+**Qué se hizo:** Aprobados `google-genai` y SSM por el usuario (ADR-001, ADR-002). `skill/gemini.py` (`ask_gemini`, `GeminiError` con kind timeout/quota/blocked/api), `skill/secrets.py` (env en dev, SSM SecureString en Lambda, caché en memoria, errores sin valores) y `AskGeminiIntentHandler`. Tras la revisión de seguridad: respuesta escapada como XML antes de `speak`, consulta limitada a 500 caracteres, `max_output_tokens=300`, `slots` nulos protegidos, log solo del kind del error.
+**Verificación realizada:** `python3 -m unittest discover -s tests` (24 tests OK). Solo con clientes mockeados: no se llamó a la API real ni a SSM real.
+**Estado al cerrar:** F003 y F004 passing. Nueva F013 (pip-audit) en failing.
+**Pendiente para la próxima sesión:** Verificar el modelo por defecto con una key real; F005 (más limpieza de markdown/URLs y truncado por oración, el escape básico ya existe); trigger de Alexa con skill ID y empaquetado manylinux de cryptography/cffi en F011; `boto3` no está en requirements.txt.
+**Commit:** feat(skill): add Gemini client and SSM key loading (F003, F004)

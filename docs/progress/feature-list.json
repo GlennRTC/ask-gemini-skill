@@ -44,11 +44,11 @@
         "El prompt instruye responder en el idioma del locale, breve y apto para voz",
         "Errores de red, cuota o bloqueo de seguridad se traducen a una excepción propia, no a un traceback"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P0",
       "requires_security_review": true,
       "requires_architecture_decision": true,
-      "notes": "ADR pendiente: SDK oficial google-genai vs. HTTP directo (dependencia, licencia, mantenimiento)."
+      "notes": "google-genai==2.32.0 (ADR-001), verified with mocked client only; never called the real API. Default model gemini-2.5-flash unverified. Security review done; query capped at 500 chars, output at 300 tokens, answer XML-escaped in the handler."
     },
     {
       "id": "F004",
@@ -60,11 +60,11 @@
         ".env y archivos de secrets están en .gitignore",
         "La key se cachea en memoria del contenedor Lambda, no se pide en cada request"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P0",
       "requires_security_review": true,
       "requires_architecture_decision": true,
-      "notes": "ADR pendiente: Secrets Manager (costo por secreto) vs. SSM SecureString (gratis en tier estándar)."
+      "notes": "SSM SecureString via GEMINI_API_KEY_PARAM (ADR-002), GEMINI_API_KEY for local dev. Verified with a fake SSM client; real SSM untested. IAM scope and no wildcards to be enforced in F011. Security review done."
     },
     {
       "id": "F005",
@@ -127,7 +127,7 @@
       "priority": "P1",
       "requires_security_review": true,
       "requires_architecture_decision": false,
-      "notes": "Alexa exige URL de política de privacidad para publicar; pendiente de definir por el dueño del proyecto."
+      "notes": "Alexa exige URL de política de privacidad para publicar; pendiente de definir por el dueño del proyecto. Security review also asks: confirm data-protection regime and whether Gemini free tier trains on prompts."
     },
     {
       "id": "F009",
@@ -189,6 +189,20 @@
       "requires_security_review": false,
       "requires_architecture_decision": false,
       "notes": "Requiere cuenta de desarrollador de Alexa; verificación manual por el usuario."
+    },
+    {
+      "id": "F013",
+      "title": "Auditoría de dependencias en CI (pip-audit)",
+      "description": "Los pins exactos no detectan vulnerabilidades conocidas; la cadena transitiva de google-genai es grande.",
+      "acceptance_criteria": [
+        "pip-audit (o equivalente aprobado) corre contra requirements.txt en CI y falla ante CVEs conocidas",
+        "Se evalúa un lockfile con hashes (--require-hashes)"
+      ],
+      "status": "failing",
+      "priority": "P1",
+      "requires_security_review": true,
+      "requires_architecture_decision": false,
+      "notes": "Found by the F003/F004 security review. Adding pip-audit needs dependency approval."
     }
   ]
 }

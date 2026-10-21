@@ -1,0 +1,71 @@
+import os
+
+import httpx
+from google import genai
+from google.genai import errors, types
+
+DEFAULT_MODEL = "gemini-2.5-flash"  # override with GEMINI_MODEL; verify availability before release
+# Alexa cuts the request at about 8 s, so the call must give up before that.
+DEFAULT_TIMEOUT_S = 6.0
+MAX_ANSWER_WORDS = 60
+MAX_QUERY_CHARS = 500
+MAX_OUTPUT_TOKENS = 300  # hard cap; the prompt's word limit alone can be ignored
+
+SYSTEM_PROMPTS = {
+    "es": f"Eres un asistente de voz. Responde siempre en español, de forma clara y breve "
+          f"(máximo {MAX_ANSWER_WORDS} palabras), sin markdown, listas ni enlaces.",
+    "en": f"You are a voice assistant. Always answer in English, clearly and briefly "
+          f"(at most {MAX_ANSWER_WORDS} words), with no markdown, lists or links.",
+}
+
+
+class GeminiError(Exception):
+    """kind is one of: timeout, quota, blocked, api."""
+
+    def __init__(self, kind):
+        super().__init__(kind)
+        self.kind = kind
+
+
+_client = None
+
+
+def _get_client(api_key, timeout_s):
+    global _client
+    if _client is None:
+        _client = genai.Client(
+            api_key=api_key, http_options=types.HttpOptions(timeout=int(timeout_s * 1000))
+        )
+    return _client
+
+
+def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEOUT_S):
+    if client is None:
+        if api_key is None:
+            from .secrets import get_gemini_api_key
+
+            api_key = get_gemini_api_key()
+        client = _get_client(api_key, timeout_s)
+
+    lang = locale.split("-")[0].lower() if locale else "en"
+    config = types.GenerateContentConfig(
+        system_instruction=SYSTEM_PROMPTS.get(lang, SYSTEM_PROMPTS["en"]), max_output_tokens=MAX_OUTPUT_TOKENS
+    )
+    try:
+        response = client.models.generate_content(
+            model=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL), contents=query[:MAX_QUERY_CHARS], config=config
+        )
+    except (httpx.TimeoutException, TimeoutError):
+        raise GeminiError("timeout") from None
+    except errors.ClientError as exc:
+        raise GeminiError("quota" if exc.code == 429 else "api") from None
+    except errors.APIError:
+        raise GeminiError("api") from None
+
+    feedback = getattr(response, "prompt_feedback", None)
+    if feedback is not None and getattr(feedback, "block_reason", None):
+        raise GeminiError("blocked")
+    text = (response.text or "").strip()
+    if not text:
+        raise GeminiError("blocked")
+    return text
