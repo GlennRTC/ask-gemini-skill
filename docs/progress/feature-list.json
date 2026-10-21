@@ -1,0 +1,194 @@
+{
+  "_readme": "Solo se edita 'status' y 'notes' de una feature existente; nunca se borra o edita un test para forzar 'passing'. Toda feature nueva descubierta durante el trabajo se agrega con status 'failing', nunca se implementa sin registrar.",
+  "project": "ask-gemini-skill",
+  "created": "2026-10-20",
+  "features": [
+    {
+      "id": "F001",
+      "title": "Interaction model y manifest de la skill (es-US, es-ES, en-US)",
+      "description": "El usuario dice la invocación de la skill y una pregunta libre; Alexa la entrega al backend como un slot AMAZON.SearchQuery.",
+      "acceptance_criteria": [
+        "skill.json e interaction models válidos para es-US, es-ES y en-US (validados con ask CLI o JSON schema)",
+        "AskGeminiIntent tiene sample utterances con slot query de tipo AMAZON.SearchQuery en los 3 locales",
+        "Incluye intents built-in AMAZON.HelpIntent, StopIntent, CancelIntent y FallbackIntent"
+      ],
+      "status": "failing",
+      "priority": "P0",
+      "requires_security_review": false,
+      "requires_architecture_decision": false,
+      "notes": ""
+    },
+    {
+      "id": "F002",
+      "title": "Handler de Lambda con intents base (Launch, Help, Stop, Fallback, SessionEnded)",
+      "description": "El backend responde a los requests estándar de Alexa con mensajes localizados.",
+      "acceptance_criteria": [
+        "Un LaunchRequest de ejemplo devuelve un saludo y reprompt en el locale del request",
+        "Help, Stop/Cancel y Fallback devuelven respuesta localizada; Stop/Cancel cierran la sesión",
+        "SessionEndedRequest no devuelve speech",
+        "Tests unitarios con requests JSON sintéticos pasan"
+      ],
+      "status": "failing",
+      "priority": "P0",
+      "requires_security_review": false,
+      "requires_architecture_decision": false,
+      "notes": "Dependencia nueva probable: ask-sdk-core. Requiere justificación y aprobación antes de agregarla."
+    },
+    {
+      "id": "F003",
+      "title": "Cliente Gemini: enviar consulta y recibir texto de respuesta",
+      "description": "AskGeminiIntent toma la consulta del usuario, la envía a la API de Google Gemini y obtiene la respuesta en texto.",
+      "acceptance_criteria": [
+        "Función ask_gemini(query, locale) -> str con timeout explícito",
+        "La respuesta de Gemini se obtiene con el SDK/HTTP elegido; con un cliente mockeado el test devuelve el texto esperado",
+        "El prompt instruye responder en el idioma del locale, breve y apto para voz",
+        "Errores de red, cuota o bloqueo de seguridad se traducen a una excepción propia, no a un traceback"
+      ],
+      "status": "failing",
+      "priority": "P0",
+      "requires_security_review": true,
+      "requires_architecture_decision": true,
+      "notes": "ADR pendiente: SDK oficial google-genai vs. HTTP directo (dependencia, licencia, mantenimiento)."
+    },
+    {
+      "id": "F004",
+      "title": "Gestión segura de la API key de Gemini",
+      "description": "La API key se lee desde AWS Secrets Manager/SSM Parameter Store o variable de entorno en dev; nunca vive en código, logs ni repo.",
+      "acceptance_criteria": [
+        "La key se carga por nombre de variable/parámetro, no por valor literal en el repo",
+        "Ningún log ni mensaje de error imprime la key",
+        ".env y archivos de secrets están en .gitignore",
+        "La key se cachea en memoria del contenedor Lambda, no se pide en cada request"
+      ],
+      "status": "failing",
+      "priority": "P0",
+      "requires_security_review": true,
+      "requires_architecture_decision": true,
+      "notes": "ADR pendiente: Secrets Manager (costo por secreto) vs. SSM SecureString (gratis en tier estándar)."
+    },
+    {
+      "id": "F005",
+      "title": "Conversión de respuesta a voz (speech-safe)",
+      "description": "La respuesta de Gemini se limpia y acota para que Alexa la lea bien.",
+      "acceptance_criteria": [
+        "Se eliminan markdown (**, #, listas, backticks) y URLs antes de hablar",
+        "Caracteres reservados de SSML (&, <, >) se escapan",
+        "Respuestas largas se truncan en límite de oración a un máximo configurable de caracteres",
+        "Tests con entradas markdown/SSML hostiles pasan"
+      ],
+      "status": "failing",
+      "priority": "P0",
+      "requires_security_review": false,
+      "requires_architecture_decision": false,
+      "notes": ""
+    },
+    {
+      "id": "F006",
+      "title": "Manejo de latencia y errores hacia el usuario",
+      "description": "Alexa corta el request a ~8 s; la skill debe responder algo útil si Gemini tarda o falla.",
+      "acceptance_criteria": [
+        "Timeout de Gemini menor al límite de Alexa; al vencer, Alexa dice un mensaje localizado de reintento",
+        "Errores de API, cuota y bloqueo por seguridad de contenido tienen mensaje localizado distinto",
+        "Se envía progressive response antes de llamar a Gemini (opcional si el SDK lo permite sin costo de latencia)",
+        "Cualquier excepción no controlada es capturada por un ErrorHandler que responde sin exponer detalles"
+      ],
+      "status": "failing",
+      "priority": "P1",
+      "requires_security_review": false,
+      "requires_architecture_decision": false,
+      "notes": ""
+    },
+    {
+      "id": "F007",
+      "title": "Sesión abierta para preguntas de seguimiento",
+      "description": "Después de responder, Alexa pregunta si hay otra consulta y mantiene la sesión abierta con reprompt.",
+      "acceptance_criteria": [
+        "La respuesta de AskGeminiIntent incluye reprompt localizado y no cierra la sesión",
+        "Si el usuario dice no/stop, la sesión cierra con despedida",
+        "v1 es stateless: no se guarda historial entre preguntas (decisión documentada)"
+      ],
+      "status": "failing",
+      "priority": "P1",
+      "requires_security_review": false,
+      "requires_architecture_decision": false,
+      "notes": "Memoria de conversación (DynamoDB) queda fuera de v1."
+    },
+    {
+      "id": "F008",
+      "title": "Privacidad y seguridad de contenido",
+      "description": "Las consultas de voz pueden contener datos personales; no deben quedar en logs y Gemini debe usar filtros de seguridad.",
+      "acceptance_criteria": [
+        "Los logs no incluyen el texto de la consulta ni la respuesta (solo longitud, locale, latencia, código de error)",
+        "Se configuran safety settings de Gemini y un bloqueo se maneja con mensaje localizado",
+        "Se verifica el skill ID del request en el handler (rechaza requests de otras skills)",
+        "Política de privacidad y notas de certificación documentadas en docs/"
+      ],
+      "status": "failing",
+      "priority": "P1",
+      "requires_security_review": true,
+      "requires_architecture_decision": false,
+      "notes": "Alexa exige URL de política de privacidad para publicar; pendiente de definir por el dueño del proyecto."
+    },
+    {
+      "id": "F009",
+      "title": "Suite de tests y comando de verificación en CI",
+      "description": "Un único comando de verificación corre local y en GitHub Actions.",
+      "acceptance_criteria": [
+        "Comando de test documentado en AGENTS.md y ejecutable con python3 -m unittest discover -s tests",
+        "Workflow en .github/workflows ejecuta el mismo comando",
+        "Cubre handlers, cliente Gemini (mock) y speech-safe"
+      ],
+      "status": "failing",
+      "priority": "P1",
+      "requires_security_review": false,
+      "requires_architecture_decision": false,
+      "notes": ""
+    },
+    {
+      "id": "F010",
+      "title": "Smoke test end-to-end local con requests de Alexa simulados",
+      "description": "Script que invoca el handler con requests JSON de Alexa y, opcionalmente, la API real de Gemini.",
+      "acceptance_criteria": [
+        "scripts/smoke.sh ejecuta Launch + AskGeminiIntent contra el handler local con Gemini mockeado y sale 0",
+        "Con GEMINI_API_KEY presente y flag explícito, repite AskGeminiIntent contra la API real",
+        "init.sh invoca este smoke test"
+      ],
+      "status": "failing",
+      "priority": "P1",
+      "requires_security_review": true,
+      "requires_architecture_decision": false,
+      "notes": "Toca acceso externo (API real) y la key."
+    },
+    {
+      "id": "F011",
+      "title": "Despliegue a AWS Lambda y vinculación con la skill",
+      "description": "Script/IaC repetible para empaquetar el código, desplegar a Lambda, configurar el trigger de Alexa y publicar el modelo.",
+      "acceptance_criteria": [
+        "Un script idempotente empaqueta y despliega la Lambda (ASK CLI o SAM, a decidir en ADR)",
+        "Rol IAM de mínimo privilegio (solo lectura del secreto, logs)",
+        "Trigger de Alexa restringido al skill ID",
+        "Instrucciones de rollback documentadas"
+      ],
+      "status": "failing",
+      "priority": "P2",
+      "requires_security_review": true,
+      "requires_architecture_decision": true,
+      "notes": "Despliegue solo con aprobación explícita del usuario."
+    },
+    {
+      "id": "F012",
+      "title": "Certificación y prueba en dispositivo real",
+      "description": "Probar la skill en el simulador y en un dispositivo Echo, y preparar los requisitos de certificación de Alexa.",
+      "acceptance_criteria": [
+        "Checklist de certificación (invocation name, sample utterances, privacy policy, descripción) en docs/",
+        "Prueba manual documentada en simulador y dispositivo para cada locale",
+        "Resultados registrados en PROGRESS.md"
+      ],
+      "status": "failing",
+      "priority": "P2",
+      "requires_security_review": false,
+      "requires_architecture_decision": false,
+      "notes": "Requiere cuenta de desarrollador de Alexa; verificación manual por el usuario."
+    }
+  ]
+}
