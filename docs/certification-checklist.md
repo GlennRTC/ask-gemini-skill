@@ -6,9 +6,9 @@ Amazon's overview page lists these areas for certification: Policy Requirements,
 - [x] Example phrases are in each locale's language and use the invocation name (fixed in F012).
 - [x] Testing instructions explain the flow and state that no account linking or purchases exist.
 - [ ] Privacy policy URL added for every locale (policy text: `docs/privacy-policy.md`, still a draft with TODOs).
-- [ ] Decide whether "Gemini" may appear in the summary and description. Using a third-party trademark may be rejected; the safe option is "AI assistant" wording. Owner decision.
-- [ ] Short description and long description are currently identical; write a longer description.
-- [ ] Skill icons (108x108 and 512x512), not yet created.
+- [x] No brand names in the summary, description or spoken messages (replaced by "Asistente Inteligente" / "Smart Assistant").
+- [x] Long descriptions written (generic, no brands, with an accuracy warning).
+- [x] Icons created: `skill-package/assets/icon_108.png` and `icon_512.png` (generic robot, regenerate with `scripts/make_icons.py`).
 - [ ] Confirm the category and the personal-information declaration (`usesPersonalInfo: false`) after the privacy review.
 - [ ] Invocation names ("consulta inteligente", "smart answers") are free of trademarks and accepted by the console validator.
 
