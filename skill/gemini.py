@@ -52,7 +52,7 @@ def _get_client(api_key, timeout_s):
     return _client
 
 
-def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEOUT_S):
+def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEOUT_S, extra_instruction=None):
     if client is None:
         if api_key is None:
             from .secrets import get_gemini_api_key
@@ -61,8 +61,11 @@ def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEO
         client = _get_client(api_key, timeout_s)
 
     lang = locale.split("-")[0].lower() if locale else "en"
+    instruction = SYSTEM_PROMPTS.get(lang, SYSTEM_PROMPTS["en"])
+    if extra_instruction:
+        instruction = f"{instruction} {extra_instruction}"
     config = types.GenerateContentConfig(
-        system_instruction=SYSTEM_PROMPTS.get(lang, SYSTEM_PROMPTS["en"]), max_output_tokens=MAX_OUTPUT_TOKENS,
+        system_instruction=instruction, max_output_tokens=MAX_OUTPUT_TOKENS,
         safety_settings=SAFETY_SETTINGS,
     )
     try:

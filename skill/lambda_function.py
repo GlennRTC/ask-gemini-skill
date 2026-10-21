@@ -7,6 +7,7 @@ from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.utils import is_intent_name, is_request_type
 
 from .gemini import GeminiError, ask_gemini
+from .guardrails import DISCLAIMERS, HEALTH_PROMPTS, classify, emergency_message
 from .secrets import SecretError
 from .speech import to_speech
 
@@ -68,9 +69,17 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         if not query:
             return rb.speak(m["fallback"]).ask(m["fallback"]).response
         locale = handler_input.request_envelope.request.locale
+        topic = classify(query, locale)
+        lang = "es" if (locale or "").lower().startswith("es") else "en"
+        if topic == "emergency":
+            logger.info("guardrail topic=emergency locale=%s", locale)
+            return rb.speak(emergency_message(locale)).set_should_end_session(True).response
         started = time.monotonic()
         try:
-            answer = ask_gemini(query, locale)
+            if topic == "health":
+                answer = ask_gemini(query, locale, extra_instruction=HEALTH_PROMPTS[lang])
+            else:
+                answer = ask_gemini(query, locale)
         except (GeminiError, SecretError) as exc:
             # Log only the error kind: the query may hold personal data.
             kind = getattr(exc, "kind", type(exc).__name__)
@@ -78,12 +87,14 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
             message = m.get(f"error_{kind}", m["error"])
             return rb.speak(message).ask(message).response
         # Metadata only: the query and the answer may contain personal data.
-        logger.info("answer_ok locale=%s chars=%d latency_ms=%d", locale, len(answer),
+        logger.info("answer_ok locale=%s topic=%s chars=%d latency_ms=%d", locale, topic, len(answer),
                     (time.monotonic() - started) * 1000)
         spoken = to_speech(answer)
         if not spoken:
             return rb.speak(m["error"]).ask(m["error"]).response
         # Each question is independent (stateless v1); the follow-up only keeps the session open.
+        if topic == "health":
+            spoken = f"{spoken} {DISCLAIMERS[lang]}"
         return rb.speak(f"{spoken} {m['more']}").ask(m["more"]).response
 
 

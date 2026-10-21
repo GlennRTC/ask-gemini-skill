@@ -17,6 +17,7 @@ An Alexa custom skill that takes a spoken question, sends it to Google Gemini an
 2. `skill/gemini.py` calls Gemini (SDK `google-genai`) with a short-voice system prompt, safety filters, a 500-character input cap, a 300-token output cap and a 4.5 s client-side timeout (Alexa gives up at about 8 s).
 3. `skill/speech.py` strips markdown and URLs, truncates at a sentence boundary and escapes SSML.
 4. Failures (timeout, quota, blocked content, API error) get distinct spoken messages.
+5. Guardrails (`skill/guardrails.py`): questions about suicide, self-harm or overdose get a fixed emergency message and never reach the model; health questions (doses, medication, symptoms) add a prompt rule against personal dosing or diagnosis plus a spoken disclaimer. They are keyword lists, so paraphrases can slip through.
 
 ## Layout
 
@@ -48,6 +49,7 @@ The API key is never logged or printed. Do not paste it in commands or chats; en
 Requires Python 3.10+ (CI uses 3.14).
 
 ```bash
+python3 scripts/lock.py        # after changing a pin: rewrites requirements*.txt with sha256 hashes (stdlib only, needs network)
 ./scripts/init.sh              # venv, dependencies, tests, dependency audit, mocked smoke test
 ./scripts/verify.sh            # the verification command CI runs: unittest + pip-audit
 ./scripts/smoke.sh --real      # also calls the real Gemini API (needs GEMINI_API_KEY)
@@ -57,4 +59,4 @@ Requires Python 3.10+ (CI uses 3.14).
 
 Implemented and tested locally: interaction models, intent handlers, Gemini client, SSM key loading, speech cleanup, error handling, follow-up questions, CI.
 
-Not done yet: deployment to AWS Lambda, certification and testing on a real Echo device, a hashes lockfile for dependencies, and the privacy policy contact details. `boto3` is provided by the Lambda runtime and is not in `requirements.txt`; the SSM path needs it installed to run locally.
+Not done yet: deployment to AWS Lambda, certification and testing on a real Echo device, and the privacy policy contact details. `boto3` is provided by the Lambda runtime and is not in `requirements.txt`; the SSM path needs it installed to run locally.

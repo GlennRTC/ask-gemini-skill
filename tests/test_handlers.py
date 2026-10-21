@@ -169,7 +169,7 @@ class LoggingTest(unittest.TestCase):
                 lambda_handler(intent("AskGeminiIntent", "en-US", {
                     "query": {"name": "query", "value": "SECRET-QUERY", "confirmationStatus": "NONE"}}), None)
         text = "\n".join(logs.output)
-        self.assertIn("answer_ok locale=en-US chars=13", text)
+        self.assertIn("answer_ok locale=en-US topic=None chars=13", text)
         self.assertNotIn("SECRET", text)
 
 

@@ -55,3 +55,6 @@ Synthetic Alexa requests sent with `aws lambda invoke` to `voice-assistant-skill
 | Latency in logs | Warm requests 0.65-1.0 s; slower ones 3.0, 4.9 and 6.1 s; cold start adds about 1.4-1.8 s. The 6 s outliers are close to Alexa's 8 s limit, so the Gemini timeout was lowered to 4.5 s (needs a redeploy). |
 
 Not exercised: row 11 (harmful request, left to the owner), and everything that depends on Alexa's speech recognition. The user confirmed in the developer console that the invocation name "asistente ada" works.
+
+## Update: health guardrails (2026-10-21)
+The owner asked a personal paracetamol dosing question and the model answered with a dose, so row 12 failed as a content-safety check. `skill/guardrails.py` now (1) answers suicide, self-harm and overdose questions with a fixed emergency message without calling the model, and (2) for health questions adds a prompt rule against personal dosing and diagnosis plus a spoken disclaimer. Unit-tested; the effect on the real model is verified only after redeploying and repeating the question.
