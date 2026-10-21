@@ -24,7 +24,7 @@ pip install --quiet -r requirements-dev.txt
 echo "== init.sh: secrets check =="
 # The key is referenced by name only; its value is never printed.
 if [ -z "${GEMINI_API_KEY:-}" ]; then
-  echo "GEMINI_API_KEY is not set: real-API checks will be skipped (mocked checks still run)"
+  echo "GEMINI_API_KEY is not set: ./scripts/smoke.sh --real will not work (init.sh only runs the mocked smoke test)"
 fi
 
 # Same command as CI: unit tests + dependency audit.

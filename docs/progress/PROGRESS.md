@@ -77,3 +77,11 @@
 **Estado al cerrar:** F009 passing. F013 failing: falta evaluar un lockfile con hashes.
 **Pendiente para la próxima sesión:** F007, F010. Crear `main` en el remoto antes de abrir PRs.
 **Commit:** docs(progress): record green CI run (F009)
+
+## 2026-10-21 — Sesión 8
+**Feature(s) trabajada(s):** F010 — Smoke test end-to-end local
+**Qué se hizo:** `scripts/smoke.sh` y `scripts/smoke.py` envían Launch y AskGeminiIntent al handler con Gemini simulado; `--real` añade la llamada real y exige key. Tras la revisión de seguridad: el modo real ahora falla si el handler responde con un mensaje de error (antes un fallo de key/cuota/timeout daba un "ok" falso), `smoke.sh` prefiere `.venv/bin/python`, y se corrigió un mensaje engañoso de `init.sh`. Push de `266d3ac` hecho con aprobación.
+**Verificación realizada:** `./scripts/init.sh` (tests OK, pip-audit limpio, smoke simulado OK); probé que `check()` detecta una respuesta de error forzada; `--real` sin key sale con error.
+**Estado al cerrar:** F010 failing: la llamada real nunca se ejecutó (sin key en este entorno).
+**Pendiente para la próxima sesión:** Que el usuario corra `GEMINI_API_KEY=... ./scripts/smoke.sh --real`; con eso se cierra F010 y se confirma el modelo `gemini-2.5-flash`. Falta fijar el skill ID en el handler (F011/F008). F007 sigue pendiente.
+**Commit:** test(smoke): add local end-to-end smoke test (F010)

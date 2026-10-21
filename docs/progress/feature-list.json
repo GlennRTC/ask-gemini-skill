@@ -157,7 +157,7 @@
       "priority": "P1",
       "requires_security_review": true,
       "requires_architecture_decision": false,
-      "notes": "Toca acceso externo (API real) y la key."
+      "notes": "scripts/smoke.sh (mocked) passes and init.sh runs it; --real implemented and fails loudly if the handler answers with an error message, but it has NEVER run against the real API (no key in the dev environment). Stays failing until the user runs: GEMINI_API_KEY=... ./scripts/smoke.sh --real. Security review done."
     },
     {
       "id": "F011",
