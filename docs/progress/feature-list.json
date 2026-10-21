@@ -92,11 +92,11 @@
         "Se envía progressive response antes de llamar a Gemini (opcional si el SDK lo permite sin costo de latencia)",
         "Cualquier excepción no controlada es capturada por un ErrorHandler que responde sin exponer detalles"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P1",
       "requires_security_review": false,
       "requires_architecture_decision": false,
-      "notes": ""
+      "notes": "Distinct localized messages for timeout/quota/blocked/api; catch-all ExceptionHandler logs only the exception type. Progressive response (optional criterion) NOT implemented: it adds an HTTP call before Gemini and was judged not worth the latency. Gemini timeout is 6 s but the first request also pays the SSM fetch; measure on real Lambda."
     },
     {
       "id": "F007",
@@ -202,7 +202,7 @@
       "priority": "P1",
       "requires_security_review": true,
       "requires_architecture_decision": false,
-      "notes": "Found by the F003/F004 security review. Adding pip-audit needs dependency approval."
+      "notes": "Found by the F003/F004 security review. Adding pip-audit needs dependency approval. Partial: pip-audit==2.10.1 (Apache-2.0) approved and added to requirements-dev.txt (not requirements.txt, to keep it out of the Lambda package); init.sh and AGENTS.md run it. Still missing: the CI step (F009) and the hashes lockfile evaluation, so status stays failing."
     }
   ]
 }

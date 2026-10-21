@@ -18,11 +18,11 @@ if [ ! -d .venv ]; then
 fi
 # shellcheck disable=SC1091
 source .venv/bin/activate
-if [ -f requirements.txt ]; then
-  pip install --quiet -r requirements.txt
-else
-  echo "requirements.txt not present yet (no dependencies approved), skipping install"
-fi
+# requirements.txt is what gets packaged for Lambda; requirements-dev.txt adds pip-audit.
+pip install --quiet -r requirements-dev.txt
+
+echo "== init.sh: dependency audit =="
+pip-audit -r requirements.txt
 
 echo "== init.sh: secrets check =="
 # The key is referenced by name only; its value is never printed.

@@ -81,10 +81,22 @@ class HandlerTest(unittest.TestCase):
             resp = lambda_handler(self.ask("x"), None)
         self.assertIn("&lt;audio src='x'/&gt; R&amp;D", speech(resp))
 
-    def test_ask_error_speaks_localized_message(self):
-        with mock.patch("skill.lambda_function.ask_gemini", side_effect=GeminiError("timeout")):
-            resp = lambda_handler(self.ask("x", "es-US"), None)
-        self.assertIn(MESSAGES["es"]["error"], speech(resp))
+    def test_each_error_kind_has_its_own_message(self):
+        kinds = {"timeout": "error_timeout", "quota": "error_quota", "blocked": "error_blocked", "api": "error"}
+        for kind, key in kinds.items():
+            for locale, lang in (("es-US", "es"), ("en-US", "en")):
+                with self.subTest(kind=kind, locale=locale):
+                    with mock.patch("skill.lambda_function.ask_gemini", side_effect=GeminiError(kind)):
+                        resp = lambda_handler(self.ask("x", locale), None)
+                    self.assertIn(MESSAGES[lang][key], speech(resp))
+                    self.assertFalse(resp["response"]["shouldEndSession"])
+        self.assertEqual(len({MESSAGES["en"][k] for k in kinds.values()}), 4)
+
+    def test_unexpected_exception_is_caught_without_details(self):
+        with mock.patch("skill.lambda_function.ask_gemini", side_effect=RuntimeError("secret detail")):
+            resp = lambda_handler(self.ask("x", "en-US"), None)
+        self.assertIn(MESSAGES["en"]["error"], speech(resp))
+        self.assertNotIn("secret detail", str(resp))
 
     def test_ask_without_query_reprompts_without_calling_gemini(self):
         with mock.patch("skill.lambda_function.ask_gemini") as fake:

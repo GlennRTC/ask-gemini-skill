@@ -1,6 +1,6 @@
 import logging
 
-from ask_sdk_core.dispatch_components import AbstractRequestHandler
+from ask_sdk_core.dispatch_components import AbstractExceptionHandler, AbstractRequestHandler
 from ask_sdk_core.skill_builder import SkillBuilder
 from ask_sdk_core.utils import is_intent_name, is_request_type
 
@@ -19,6 +19,9 @@ MESSAGES = {
         "fallback": "No te entendí. ¿Qué quieres saber?",
         "bye": "Hasta luego.",
         "error": "Hubo un problema al consultar. ¿Quieres intentarlo de nuevo?",
+        "error_timeout": "Gemini tardó demasiado en responder. ¿Quieres intentarlo de nuevo?",
+        "error_quota": "Se alcanzó el límite de consultas por ahora. Inténtalo de nuevo más tarde.",
+        "error_blocked": "No puedo responder esa pregunta. ¿Quieres preguntar otra cosa?",
     },
     "en": {
         "welcome": "Hi, what would you like to know?",
@@ -27,6 +30,9 @@ MESSAGES = {
         "fallback": "Sorry, I didn't get that. What would you like to know?",
         "bye": "Goodbye.",
         "error": "There was a problem answering. Would you like to try again?",
+        "error_timeout": "Gemini took too long to answer. Would you like to try again?",
+        "error_quota": "The query limit has been reached for now. Please try again later.",
+        "error_blocked": "I can't answer that question. Would you like to ask something else?",
     },
 }
 
@@ -60,8 +66,10 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
             answer = ask_gemini(query, handler_input.request_envelope.request.locale)
         except (GeminiError, SecretError) as exc:
             # Log only the error kind: the query may hold personal data.
-            logger.warning("gemini_failure kind=%s", getattr(exc, "kind", type(exc).__name__))
-            return rb.speak(m["error"]).ask(m["error"]).response
+            kind = getattr(exc, "kind", type(exc).__name__)
+            logger.warning("gemini_failure kind=%s", kind)
+            message = m.get(f"error_{kind}", m["error"])
+            return rb.speak(message).ask(message).response
         spoken = to_speech(answer)
         if not spoken:
             return rb.speak(m["error"]).ask(m["error"]).response
@@ -105,7 +113,19 @@ class SessionEndedRequestHandler(AbstractRequestHandler):
         return handler_input.response_builder.response
 
 
+class CatchAllExceptionHandler(AbstractExceptionHandler):
+    def can_handle(self, handler_input, exception):
+        return True
+
+    def handle(self, handler_input, exception):
+        # Only the exception type is logged: messages may include the user's query.
+        logger.error("unhandled_exception type=%s", type(exception).__name__)
+        m = messages_for(handler_input)
+        return handler_input.response_builder.speak(m["error"]).ask(m["error"]).response
+
+
 sb = SkillBuilder()
+sb.add_exception_handler(CatchAllExceptionHandler())
 for handler in (
     LaunchRequestHandler(),
     AskGeminiIntentHandler(),

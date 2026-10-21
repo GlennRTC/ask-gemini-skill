@@ -53,3 +53,11 @@
 **Estado al cerrar:** F005 passing.
 **Pendiente para la próxima sesión:** F006 (timeouts y ErrorHandler general) o F007 (sesión abierta; ya parcialmente cubierta por el reprompt). F013 espera aprobación explícita de pip-audit.
 **Commit:** feat(skill): clean and truncate answers for speech (F005)
+
+## 2026-10-20 — Sesión 5
+**Feature(s) trabajada(s):** F006 — Latencia y errores; F013 (parcial) — pip-audit
+**Qué se hizo:** F006: mensajes localizados distintos para timeout, cuota, bloqueo y error de API; `CatchAllExceptionHandler` que responde sin detalles y registra solo el tipo de excepción. Se omitió la progressive response (criterio opcional) por el costo de latencia. F013: pip-audit 2.10.1 aprobado por el usuario; va en `requirements-dev.txt` (no en `requirements.txt`, para no empaquetarlo en Lambda). `init.sh` lo instala y corre; `AGENTS.md` lo lista como verificación. El test de error de la sesión 3 se actualizó porque el comportamiento cambió por requisito de F006 (antes todos los errores decían el mismo mensaje).
+**Verificación realizada:** `python3 -m unittest discover -s tests` (34 OK); `./scripts/init.sh` incluyendo `pip-audit -r requirements.txt`.
+**Estado al cerrar:** F006 passing. F013 sigue failing (falta paso de CI y evaluar lockfile con hashes).
+**Pendiente para la próxima sesión:** F007, F009 (CI con tests y pip-audit), F010. Medir latencia real en Lambda.
+**Commit:** feat(skill): localized error kinds and catch-all handler (F006)
