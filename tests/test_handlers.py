@@ -74,7 +74,24 @@ class HandlerTest(unittest.TestCase):
             resp = lambda_handler(self.ask("capital of France"), None)
         fake.assert_called_once_with("capital of France", "en-US")
         self.assertIn("Paris.", speech(resp))
+        self.assertIn(MESSAGES["en"]["more"], speech(resp))
+        self.assertIn(MESSAGES["en"]["more"], resp["response"]["reprompt"]["outputSpeech"]["ssml"])
         self.assertFalse(resp["response"]["shouldEndSession"])
+
+    def test_follow_up_is_localized(self):
+        with mock.patch("skill.lambda_function.ask_gemini", return_value="Madrid."):
+            resp = lambda_handler(self.ask("capital de España", "es-ES"), None)
+        self.assertIn(MESSAGES["es"]["more"], speech(resp))
+
+    def test_no_ends_session_and_yes_asks_again(self):
+        for locale, lang in (("es-US", "es"), ("en-US", "en")):
+            with self.subTest(locale=locale):
+                no = lambda_handler(intent("AMAZON.NoIntent", locale), None)
+                self.assertIn(MESSAGES[lang]["bye"], speech(no))
+                self.assertTrue(no["response"]["shouldEndSession"])
+                yes = lambda_handler(intent("AMAZON.YesIntent", locale), None)
+                self.assertIn(MESSAGES[lang]["welcome"], speech(yes))
+                self.assertFalse(yes["response"]["shouldEndSession"])
 
     def test_answer_is_xml_escaped(self):
         with mock.patch("skill.lambda_function.ask_gemini", return_value="<audio src='x'/> R&D"):

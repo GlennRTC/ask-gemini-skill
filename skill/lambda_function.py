@@ -18,6 +18,7 @@ MESSAGES = {
         "help": "Dime tu pregunta, por ejemplo: quién escribió Don Quijote.",
         "fallback": "No te entendí. ¿Qué quieres saber?",
         "bye": "Hasta luego.",
+        "more": "¿Quieres preguntar algo más?",
         "error": "Hubo un problema al consultar. ¿Quieres intentarlo de nuevo?",
         "error_timeout": "Gemini tardó demasiado en responder. ¿Quieres intentarlo de nuevo?",
         "error_quota": "Se alcanzó el límite de consultas por ahora. Inténtalo de nuevo más tarde.",
@@ -29,6 +30,7 @@ MESSAGES = {
         "help": "Tell me your question, for example: who wrote Don Quixote.",
         "fallback": "Sorry, I didn't get that. What would you like to know?",
         "bye": "Goodbye.",
+        "more": "Would you like to ask something else?",
         "error": "There was a problem answering. Would you like to try again?",
         "error_timeout": "Gemini took too long to answer. Would you like to try again?",
         "error_quota": "The query limit has been reached for now. Please try again later.",
@@ -73,7 +75,8 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         spoken = to_speech(answer)
         if not spoken:
             return rb.speak(m["error"]).ask(m["error"]).response
-        return rb.speak(spoken).ask(m["welcome_reprompt"]).response
+        # Each question is independent (stateless v1); the follow-up only keeps the session open.
+        return rb.speak(f"{spoken} {m['more']}").ask(m["more"]).response
 
 
 class HelpIntentHandler(AbstractRequestHandler):
@@ -94,11 +97,21 @@ class FallbackIntentHandler(AbstractRequestHandler):
         return handler_input.response_builder.speak(m["fallback"]).ask(m["fallback"]).response
 
 
+class YesIntentHandler(AbstractRequestHandler):
+    def can_handle(self, handler_input):
+        return is_intent_name("AMAZON.YesIntent")(handler_input)
+
+    def handle(self, handler_input):
+        m = messages_for(handler_input)
+        return handler_input.response_builder.speak(m["welcome"]).ask(m["welcome_reprompt"]).response
+
+
 class StopCancelIntentHandler(AbstractRequestHandler):
     def can_handle(self, handler_input):
-        return is_intent_name("AMAZON.StopIntent")(handler_input) or is_intent_name(
-            "AMAZON.CancelIntent"
-        )(handler_input)
+        return any(
+            is_intent_name(name)(handler_input)
+            for name in ("AMAZON.StopIntent", "AMAZON.CancelIntent", "AMAZON.NoIntent")
+        )
 
     def handle(self, handler_input):
         m = messages_for(handler_input)
@@ -129,6 +142,7 @@ sb.add_exception_handler(CatchAllExceptionHandler())
 for handler in (
     LaunchRequestHandler(),
     AskGeminiIntentHandler(),
+    YesIntentHandler(),
     HelpIntentHandler(),
     FallbackIntentHandler(),
     StopCancelIntentHandler(),

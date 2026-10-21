@@ -43,6 +43,14 @@
             "cuánto {query}",
             "por qué {query}"
           ]
+        },
+        {
+          "name": "AMAZON.YesIntent",
+          "samples": []
+        },
+        {
+          "name": "AMAZON.NoIntent",
+          "samples": []
         }
       ],
       "types": []

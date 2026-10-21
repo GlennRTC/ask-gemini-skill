@@ -93,3 +93,11 @@
 **Estado al cerrar:** F010 passing.
 **Pendiente para la próxima sesión:** F007, F008 (incluye skill ID), F011, F012, F013 (lockfile con hashes).
 **Commit:** docs(progress): close F010 after real smoke run
+
+## 2026-10-21 — Sesión 10
+**Feature(s) trabajada(s):** F007 — Sesión abierta para preguntas de seguimiento
+**Qué se hizo:** Tras cada respuesta la skill añade una pregunta localizada de seguimiento (que también es el reprompt) y mantiene la sesión abierta. Se agregaron `AMAZON.YesIntent` y `AMAZON.NoIntent` a los tres modelos de interacción: "no" cierra con despedida (junto con Stop/Cancel) y "sí" pide una nueva pregunta. Decisión documentada en `AGENTS.md`: v1 es stateless, sin historial.
+**Verificación realizada:** `./scripts/init.sh`: 37 tests OK, pip-audit limpio, smoke simulado muestra la pregunta de seguimiento. Sin prueba en dispositivo real.
+**Estado al cerrar:** F007 passing.
+**Pendiente para la próxima sesión:** F008 (privacidad, skill ID, safety settings), F011 (despliegue), F012 (certificación y dispositivo), F013 (lockfile con hashes). Push del commit de F007 pendiente de aprobación.
+**Commit:** feat(skill): follow-up question and yes/no intents (F007)

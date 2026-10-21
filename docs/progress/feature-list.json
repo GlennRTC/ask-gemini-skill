@@ -107,11 +107,11 @@
         "Si el usuario dice no/stop, la sesión cierra con despedida",
         "v1 es stateless: no se guarda historial entre preguntas (decisión documentada)"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P1",
       "requires_security_review": false,
       "requires_architecture_decision": false,
-      "notes": "Memoria de conversación (DynamoDB) queda fuera de v1."
+      "notes": "Answer is followed by a localized follow-up question that is also the reprompt; AMAZON.NoIntent ends the session with a goodbye, AMAZON.YesIntent asks for a new question. v1 is stateless by design (documented in AGENTS.md). Conversation memory (DynamoDB) is out of v1. Verified with unit tests only, not on a real Alexa device (F012)."
     },
     {
       "id": "F008",

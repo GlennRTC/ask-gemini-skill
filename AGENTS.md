@@ -12,7 +12,7 @@ Una skill para Amazon Alexa que captura consultas para Google Gemini a traves de
 
 - Backend: Python 3 en AWS Lambda con el Alexa Skills Kit SDK (custom skill) y Google Gemini como LLM. Es el default del harness y el SDK oficial de ASK y de Gemini están disponibles en Python.
 - Automatización/scripting: Bash (`scripts/init.sh`, `scripts/smoke.sh`).
-- Base de datos: ninguna en v1. La skill es stateless (consulta -> Gemini -> respuesta). Si luego se necesita historial, evaluar DynamoDB con un ADR.
+- Base de datos: ninguna en v1. La skill es stateless (consulta -> Gemini -> respuesta). Cada pregunta es independiente: la sesión se mantiene abierta para seguimiento, pero no se pasa contexto previo a Gemini. Si luego se necesita historial, evaluar DynamoDB con un ADR.
 - Plataforma objetivo: desarrollo en Linux; runtime en AWS Lambda. Locales de Alexa: es-US, es-ES, en-US.
 - Hosting/despliegue: AWS Lambda con trigger de Alexa Skills Kit. La API key de Gemini va en Secrets Manager o SSM Parameter Store (nunca en el repo). Herramienta de despliegue (ASK CLI o SAM) pendiente de ADR.
 

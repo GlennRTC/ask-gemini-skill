@@ -4,7 +4,7 @@ from pathlib import Path
 
 PKG = Path(__file__).resolve().parent.parent / "skill-package"
 LOCALES = ["es-US", "es-ES", "en-US"]
-BUILTINS = {"AMAZON.HelpIntent", "AMAZON.StopIntent", "AMAZON.CancelIntent", "AMAZON.FallbackIntent"}
+BUILTINS = {"AMAZON.HelpIntent", "AMAZON.StopIntent", "AMAZON.CancelIntent", "AMAZON.FallbackIntent", "AMAZON.YesIntent", "AMAZON.NoIntent"}
 
 
 class InteractionModelTest(unittest.TestCase):
