@@ -2,7 +2,7 @@
 
 Technical points that affect certification, collected during F008. The full checklist and device tests are tracked in F012.
 
-- **Invocation names** are provisional ("consulta inteligente", "smart answers"). Avoid third-party trademarks such as "Gemini" in the invocation name and skill name unless Google authorises it.
+- **Invocation names** are provisional (the store name is "Ada"; Alexa needs an invocation name of two or more words, so it is "asistente ada" / "assistant ada") ("asistente ada", "assistant ada"). Avoid third-party trademarks such as "Gemini" in the invocation name and skill name unless Google authorises it.
 - **Privacy policy URL** is mandatory for publishing; see `docs/privacy-policy.md` (draft).
 - **Personal information flag:** `usesPersonalInfo` is `false` in `skill.json` because the skill reads no account data. Re-check this if the privacy review concludes that spoken questions count as personal data to declare.
 - **Skill ID verification:** the handler rejects requests whose application ID differs from `ALEXA_SKILL_ID`, and refuses to run at all when the variable is missing (local runs must set `ALLOW_NO_SKILL_ID=1`). F011 must set the variable and restrict the Lambda trigger to the same skill ID.

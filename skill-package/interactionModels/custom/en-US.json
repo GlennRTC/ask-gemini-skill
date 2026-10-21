@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "smart answers",
+      "invocationName": "assistant ada",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",

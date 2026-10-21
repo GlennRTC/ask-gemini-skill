@@ -1,13 +1,13 @@
-# Ask Gemini Skill
+# Ada, an Alexa voice assistant skill
 
 An Alexa custom skill that takes a spoken question, sends it to Google Gemini and reads the answer back. Runs as a Python 3 AWS Lambda function.
 
 ```
-"Alexa, open smart answers" -> "Hi, what would you like to know?"
+"Alexa, open assistant ada" -> "Hi, what would you like to know?"
 "who wrote Don Quixote"     -> Alexa speaks Gemini's answer, then asks if you want another question
 ```
 
-- **Locales:** es-US, es-ES, en-US (invocation names "consulta inteligente" and "smart answers", provisional).
+- **Locales:** es-US, es-ES, en-US (invocation names "asistente ada" and "assistant ada", provisional).
 - **Stateless:** every question is independent. The skill has no database and keeps no history.
 - **Privacy:** logs hold only locale, answer length, latency and error type, never the question or the answer. See `docs/privacy-policy.md` (draft).
 

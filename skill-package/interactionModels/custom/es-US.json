@@ -1,7 +1,7 @@
 {
   "interactionModel": {
     "languageModel": {
-      "invocationName": "consulta inteligente",
+      "invocationName": "asistente ada",
       "intents": [
         {
           "name": "AMAZON.CancelIntent",

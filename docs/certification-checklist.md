@@ -10,7 +10,7 @@ Amazon's overview page lists these areas for certification: Policy Requirements,
 - [x] Long descriptions written (generic, no brands, with an accuracy warning).
 - [x] Icons created: `skill-package/assets/icon_108.png` and `icon_512.png` (generic robot, regenerate with `scripts/make_icons.py`).
 - [ ] Confirm the category and the personal-information declaration (`usesPersonalInfo: false`) after the privacy review.
-- [ ] Invocation names ("consulta inteligente", "smart answers") are free of trademarks and accepted by the console validator.
+- [ ] Invocation names ("asistente ada", "assistant ada") are free of trademarks and accepted by the console validator.
 
 ## Behaviour to confirm in the simulator and on an Echo
 Run each row once per locale (es-US, es-ES, en-US). Record Pass/Fail and the date.
