@@ -29,3 +29,11 @@
 **Estado al cerrar:** F001 passing (validación estructural; falta el validador oficial).
 **Pendiente para la próxima sesión:** F002 (handler Lambda; requiere aprobar `ask-sdk-core`). Confirmar invocation names y validar el modelo con ask CLI cuando se instale.
 **Commit:** feat(skill): add interaction models and manifest (F001)
+
+## 2026-10-20 — Sesión 2
+**Feature(s) trabajada(s):** F002 — Handler de Lambda con intents base
+**Qué se hizo:** El usuario aprobó `ask-sdk-core` (1.19.0, Apache 2.0, versión más reciente en PyPI); `requirements.txt` fija también las dependencias transitivas con `pip freeze`. `skill/lambda_function.py` implementa Launch, Help, Fallback, Stop/Cancel y SessionEnded con mensajes en es/en; un locale desconocido cae a inglés. Help y Fallback dejan la sesión abierta con reprompt.
+**Verificación realizada:** `python3 -m unittest discover -s tests` (9 tests OK, con requests JSON sintéticos) y `./scripts/init.sh` sin errores.
+**Estado al cerrar:** F002 passing.
+**Pendiente para la próxima sesión:** F003 (cliente Gemini + `AskGeminiIntent`) y F004 (API key), ambos con revisión de seguridad y ADR previo (SDK google-genai vs. HTTP; Secrets Manager vs. SSM). Todavía no hay ErrorHandler (F006).
+**Commit:** feat(skill): add base Alexa intent handlers (F002)

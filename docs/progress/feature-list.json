@@ -28,11 +28,11 @@
         "SessionEndedRequest no devuelve speech",
         "Tests unitarios con requests JSON sintéticos pasan"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P0",
       "requires_security_review": false,
       "requires_architecture_decision": false,
-      "notes": "Dependencia nueva probable: ask-sdk-core. Requiere justificación y aprobación antes de agregarla."
+      "notes": "ask-sdk-core==1.19.0 (Apache 2.0) approved by the user; transitive deps pinned in requirements.txt. AskGeminiIntent is handled in F003."
     },
     {
       "id": "F003",
