@@ -85,3 +85,11 @@
 **Estado al cerrar:** F010 failing: la llamada real nunca se ejecutó (sin key en este entorno).
 **Pendiente para la próxima sesión:** Que el usuario corra `GEMINI_API_KEY=... ./scripts/smoke.sh --real`; con eso se cierra F010 y se confirma el modelo `gemini-2.5-flash`. Falta fijar el skill ID en el handler (F011/F008). F007 sigue pendiente.
 **Commit:** test(smoke): add local end-to-end smoke test (F010)
+
+## 2026-10-21 — Sesión 9
+**Feature(s) trabajada(s):** F010 — cierre del smoke test real
+**Qué se hizo:** El primer smoke real falló con 404 (`gemini-2.5-flash` ya no está disponible para cuentas nuevas) y se cambió el modelo por defecto a `gemini-3.5-flash-lite`. Luego falló con 400: la API rechaza plazos de servidor menores de 10 s y el SDK convierte `HttpOptions(timeout)` en esa cabecera; el timeout de 6 s ahora se aplica del lado del cliente con `client_args`. El log de errores incluye el status HTTP. Causa encontrada aislando cada parámetro de la petición con un script de diagnóstico del usuario.
+**Verificación realizada:** El usuario ejecutó `./scripts/smoke.sh --real` con su key: respuesta real "The capital of France is Paris." Tests: 35 OK. Nota: el usuario pegó una key en el chat; se le pidió revocarla.
+**Estado al cerrar:** F010 passing.
+**Pendiente para la próxima sesión:** F007, F008 (incluye skill ID), F011, F012, F013 (lockfile con hashes).
+**Commit:** docs(progress): close F010 after real smoke run

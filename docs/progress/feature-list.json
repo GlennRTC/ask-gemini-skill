@@ -153,11 +153,11 @@
         "Con GEMINI_API_KEY presente y flag explícito, repite AskGeminiIntent contra la API real",
         "init.sh invoca este smoke test"
       ],
-      "status": "failing",
+      "status": "passing",
       "priority": "P1",
       "requires_security_review": true,
       "requires_architecture_decision": false,
-      "notes": "scripts/smoke.sh (mocked) passes and init.sh runs it; --real implemented and fails loudly if the handler answers with an error message, but it has NEVER run against the real API (no key in the dev environment). Stays failing until the user runs: GEMINI_API_KEY=... ./scripts/smoke.sh --real. Security review done."
+      "notes": "scripts/smoke.sh passes mocked (run by init.sh) and with --real: user ran it against the real API with gemini-3.5-flash-lite on 2026-10-21 and got a spoken answer. Real-mode check fails if the handler answers with an error message. Security review done."
     },
     {
       "id": "F011",
