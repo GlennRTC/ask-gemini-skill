@@ -11,6 +11,7 @@ from .gemini import GeminiError, ask_gemini
 from .guardrails import DISCLAIMERS, HEALTH_PROMPTS, classify, emergency_message
 from .secrets import SecretError
 from .speech import to_speech
+from .voice import VoiceInterceptor
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
@@ -162,11 +163,15 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
         # Only the exception type is logged: messages may include the user's query.
         logger.error("unhandled_exception type=%s", type(exception).__name__)
         m = messages_for(handler_input)
-        return handler_input.response_builder.speak(m["error"]).ask(m["error"]).response
+        response = handler_input.response_builder.speak(m["error"]).ask(m["error"]).response
+        # Response interceptors do not run on the exception path, so apply the voice here too.
+        VoiceInterceptor().process(handler_input, response)
+        return response
 
 
 sb = SkillBuilder()
 sb.add_exception_handler(CatchAllExceptionHandler())
+sb.add_global_response_interceptor(VoiceInterceptor())
 for handler in (
     LaunchRequestHandler(),
     AskGeminiIntentHandler(),
