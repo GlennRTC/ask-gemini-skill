@@ -10,6 +10,8 @@ from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
+os.environ.setdefault("ALEXA_SKILL_ID", "amzn1.ask.skill.smoke")  # matches the synthetic events
+
 from skill.lambda_function import MESSAGES, lambda_handler  # noqa: E402
 
 ERROR_TEXTS = {v for lang in MESSAGES.values() for k, v in lang.items() if k.startswith("error")}

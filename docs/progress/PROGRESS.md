@@ -101,3 +101,11 @@
 **Estado al cerrar:** F007 passing.
 **Pendiente para la próxima sesión:** F008 (privacidad, skill ID, safety settings), F011 (despliegue), F012 (certificación y dispositivo), F013 (lockfile con hashes). Push del commit de F007 pendiente de aprobación.
 **Commit:** feat(skill): follow-up question and yes/no intents (F007)
+
+## 2026-10-21 — Sesión 11
+**Feature(s) trabajada(s):** F008 — Privacidad y seguridad de contenido
+**Qué se hizo:** `lambda_handler` valida el skill ID (`ALEXA_SKILL_ID`) y falla cerrado si falta; solo `ALLOW_NO_SKILL_ID=1` lo omite (tests y smoke fijan su propio ID). Safety settings de Gemini (4 categorías, BLOCK_MEDIUM_AND_ABOVE). Log de éxito solo con locale, longitud y latencia. Borradores `docs/privacy-policy.md` y `docs/certification-notes.md`. Tras la revisión de seguridad: se invirtió el default del skill ID (antes dependía de `AWS_LAMBDA_FUNCTION_NAME`), se añadió test de candidato bloqueado con texto `None` y notas sobre no activar DEBUG en librerías.
+**Verificación realizada:** `./scripts/init.sh`: 44 tests OK, pip-audit limpio, smoke simulado OK.
+**Estado al cerrar:** F008 failing: los safety settings no se han probado contra la API real (la key fue revocada).
+**Pendiente para la próxima sesión:** El usuario crea una key nueva y corre `./scripts/smoke.sh --real`; si pasa, cerrar F008. TODOs de la política (contacto, fecha, términos de Google, retención de CloudWatch) y revisión legal. F011: ALEXA_SKILL_ID, trigger restringido, logs en WARNING para librerías.
+**Commit:** feat(skill): verify skill id, safety settings and privacy docs (F008)

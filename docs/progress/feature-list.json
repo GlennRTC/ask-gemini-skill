@@ -127,7 +127,7 @@
       "priority": "P1",
       "requires_security_review": true,
       "requires_architecture_decision": false,
-      "notes": "Alexa exige URL de política de privacidad para publicar; pendiente de definir por el dueño del proyecto. Security review also asks: confirm data-protection regime and whether Gemini free tier trains on prompts."
+      "notes": "Alexa exige URL de política de privacidad para publicar; pendiente de definir por el dueño del proyecto. Security review also asks: confirm data-protection regime and whether Gemini free tier trains on prompts. STATUS: implemented and unit-tested (44 tests) but kept failing: the safety settings have never been sent to the real API (key was revoked), so a real run could still return 400. Close it after ./scripts/smoke.sh --real passes with a new key. Skill ID check fails closed unless ALLOW_NO_SKILL_ID=1. docs/privacy-policy.md is a draft with TODOs (contact, date, Google data-use terms, CloudWatch retention); no legal review. Security review done."
     },
     {
       "id": "F009",

@@ -11,6 +11,16 @@ MAX_ANSWER_WORDS = 60
 MAX_QUERY_CHARS = 500
 MAX_OUTPUT_TOKENS = 300  # hard cap; the prompt's word limit alone can be ignored
 
+SAFETY_SETTINGS = [
+    types.SafetySetting(category=category, threshold=types.HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE)
+    for category in (
+        types.HarmCategory.HARM_CATEGORY_HARASSMENT,
+        types.HarmCategory.HARM_CATEGORY_HATE_SPEECH,
+        types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT,
+        types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT,
+    )
+]
+
 SYSTEM_PROMPTS = {
     "es": f"Eres un asistente de voz. Responde siempre en español, de forma clara y breve "
           f"(máximo {MAX_ANSWER_WORDS} palabras), sin markdown, listas ni enlaces.",
@@ -52,7 +62,8 @@ def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEO
 
     lang = locale.split("-")[0].lower() if locale else "en"
     config = types.GenerateContentConfig(
-        system_instruction=SYSTEM_PROMPTS.get(lang, SYSTEM_PROMPTS["en"]), max_output_tokens=MAX_OUTPUT_TOKENS
+        system_instruction=SYSTEM_PROMPTS.get(lang, SYSTEM_PROMPTS["en"]), max_output_tokens=MAX_OUTPUT_TOKENS,
+        safety_settings=SAFETY_SETTINGS,
     )
     try:
         response = client.models.generate_content(

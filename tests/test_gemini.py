@@ -49,6 +49,13 @@ class AskGeminiTest(unittest.TestCase):
         self.assertIsNone(options.timeout)
         self.assertEqual(options.client_args, {"timeout": 6.0})
 
+    def test_safety_settings_are_sent(self):
+        client, call = fake_client(response("ok"))
+        ask_gemini("x", "en-US", client=client)
+        settings = call.kwargs["config"].safety_settings
+        self.assertEqual(len(settings), 4)
+        self.assertTrue(all(s.threshold.name == "BLOCK_MEDIUM_AND_ABOVE" for s in settings))
+
     def test_prompt_follows_locale_language(self):
         for locale, word in (("es-ES", "español"), ("es-US", "español"), ("en-US", "English"), ("fr-FR", "English")):
             with self.subTest(locale=locale):
@@ -78,7 +85,8 @@ class AskGeminiTest(unittest.TestCase):
         self.assertEqual(ctx.exception.kind, "api")
 
     def test_blocked_prompt_or_empty_text(self):
-        for resp in (response(None, block_reason="SAFETY"), response("")):
+        # text is None when a candidate is blocked by safety filters (finish_reason SAFETY).
+        for resp in (response(None, block_reason="SAFETY"), response(""), response(None)):
             with self.subTest(resp=resp):
                 client, _ = fake_client(resp)
                 with self.assertRaises(GeminiError) as ctx:

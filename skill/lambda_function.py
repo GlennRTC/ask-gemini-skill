@@ -1,4 +1,6 @@
 import logging
+import os
+import time
 
 from ask_sdk_core.dispatch_components import AbstractExceptionHandler, AbstractRequestHandler
 from ask_sdk_core.skill_builder import SkillBuilder
@@ -9,6 +11,7 @@ from .secrets import SecretError
 from .speech import to_speech
 
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 # Spoken strings per language; unknown locales fall back to English.
 MESSAGES = {
@@ -64,14 +67,19 @@ class AskGeminiIntentHandler(AbstractRequestHandler):
         query = slot.value if slot else None
         if not query:
             return rb.speak(m["fallback"]).ask(m["fallback"]).response
+        locale = handler_input.request_envelope.request.locale
+        started = time.monotonic()
         try:
-            answer = ask_gemini(query, handler_input.request_envelope.request.locale)
+            answer = ask_gemini(query, locale)
         except (GeminiError, SecretError) as exc:
             # Log only the error kind: the query may hold personal data.
             kind = getattr(exc, "kind", type(exc).__name__)
             logger.warning("gemini_failure kind=%s status=%s", kind, getattr(exc, "status", None))
             message = m.get(f"error_{kind}", m["error"])
             return rb.speak(message).ask(message).response
+        # Metadata only: the query and the answer may contain personal data.
+        logger.info("answer_ok locale=%s chars=%d latency_ms=%d", locale, len(answer),
+                    (time.monotonic() - started) * 1000)
         spoken = to_speech(answer)
         if not spoken:
             return rb.speak(m["error"]).ask(m["error"]).response
@@ -150,4 +158,22 @@ for handler in (
 ):
     sb.add_request_handler(handler)
 
-lambda_handler = sb.lambda_handler()
+_dispatch = sb.lambda_handler()
+
+
+def lambda_handler(event, context):
+    """Reject requests that do not come from our skill before doing any work."""
+    expected = os.environ.get("ALEXA_SKILL_ID")
+    if not expected:
+        # Fail closed: without the ID anyone who knows the endpoint could spend the API key.
+        # Local runs opt out explicitly.
+        if os.environ.get("ALLOW_NO_SKILL_ID") != "1":
+            raise RuntimeError("ALEXA_SKILL_ID is not configured")
+    else:
+        try:
+            actual = event["context"]["System"]["application"]["applicationId"]
+        except (KeyError, TypeError):
+            actual = None
+        if actual != expected:
+            raise ValueError("Invalid skill id")
+    return _dispatch(event, context)

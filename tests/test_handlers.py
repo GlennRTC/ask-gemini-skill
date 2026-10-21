@@ -1,9 +1,12 @@
+import os
 import sys
 import unittest
 from pathlib import Path
 from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+os.environ.setdefault("ALEXA_SKILL_ID", "amzn1.ask.skill.test")  # matches the synthetic events below
 
 from skill.gemini import GeminiError  # noqa: E402
 from skill.lambda_function import MESSAGES, lambda_handler  # noqa: E402
@@ -120,6 +123,54 @@ class HandlerTest(unittest.TestCase):
             resp = lambda_handler(self.ask(None), None)
         fake.assert_not_called()
         self.assertIn(MESSAGES["en"]["fallback"], speech(resp))
+
+
+class SkillIdTest(unittest.TestCase):
+    def env(self, **values):
+        patcher = mock.patch.dict(os.environ, values, clear=True)
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def launch(self):
+        return event({"type": "LaunchRequest"})
+
+    def test_accepts_matching_skill_id(self):
+        self.env(ALEXA_SKILL_ID="amzn1.ask.skill.test")
+        self.assertIn("outputSpeech", lambda_handler(self.launch(), None)["response"])
+
+    def test_rejects_other_skill_id(self):
+        self.env(ALEXA_SKILL_ID="amzn1.ask.skill.other")
+        with self.assertRaises(ValueError):
+            lambda_handler(self.launch(), None)
+
+    def test_rejects_request_without_application_id(self):
+        self.env(ALEXA_SKILL_ID="amzn1.ask.skill.test")
+        bad = self.launch()
+        del bad["context"]["System"]["application"]
+        with self.assertRaises(ValueError):
+            lambda_handler(bad, None)
+
+    def test_fails_closed_without_configured_id(self):
+        for values in ({}, {"ALEXA_SKILL_ID": ""}, {"ALLOW_NO_SKILL_ID": "true"}):
+            with self.subTest(env=values):
+                self.env(**values)
+                with self.assertRaises(RuntimeError):
+                    lambda_handler(self.launch(), None)
+
+    def test_explicit_opt_out_allows_local_runs(self):
+        self.env(ALLOW_NO_SKILL_ID="1")
+        self.assertIn("outputSpeech", lambda_handler(self.launch(), None)["response"])
+
+
+class LoggingTest(unittest.TestCase):
+    def test_success_log_has_no_query_or_answer(self):
+        with mock.patch("skill.lambda_function.ask_gemini", return_value="SECRET-ANSWER"):
+            with self.assertLogs("skill.lambda_function", level="INFO") as logs:
+                lambda_handler(intent("AskGeminiIntent", "en-US", {
+                    "query": {"name": "query", "value": "SECRET-QUERY", "confirmationStatus": "NONE"}}), None)
+        text = "\n".join(logs.output)
+        self.assertIn("answer_ok locale=en-US chars=13", text)
+        self.assertNotIn("SECRET", text)
 
 
 if __name__ == "__main__":
