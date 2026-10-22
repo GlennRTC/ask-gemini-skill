@@ -40,7 +40,8 @@ requirements-dev.txt    Adds pip-audit
 | `ALEXA_SKILL_ID` | Required. Requests from any other skill are rejected. |
 | `GEMINI_API_KEY_PARAM` | Name of the SSM SecureString parameter holding the API key (Lambda). |
 | `GEMINI_API_KEY` | API key for local development; takes precedence over SSM. |
-| `GEMINI_MODEL` | Optional. Defaults to `gemini-3.5-flash-lite`. |
+| `GEMINI_MODEL` | Optional. Main model, default `gemini-3.6-flash`. |
+| `GEMINI_FALLBACK_MODELS` | Optional. Comma-separated models tried in order when the previous one is overloaded, slow or out of quota (default `gemini-3.1-flash-lite,gemini-3.5-flash-lite`; empty disables). |
 | `SPEECH_MAX_CHARS` | Optional. Maximum spoken answer length, default 600. |
 | `CONTEXT_TURNS` | Optional. Previous question/answer pairs sent to the model within one Alexa session (default 4, `0` turns the context off). The default lives in `skill/context.py`. |
 | `ALLOW_NO_SKILL_ID=1` | Local runs only: skips the skill ID check. |

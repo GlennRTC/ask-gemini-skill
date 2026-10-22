@@ -93,7 +93,7 @@ class AskGeminiTest(unittest.TestCase):
             return response("from fallback")
 
         client = SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
-        with mock.patch.dict("os.environ", {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODEL": "backup-model"}):
+        with mock.patch.dict("os.environ", {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODELS": "backup-model"}):
             self.assertEqual(ask_gemini("x", "en-US", client=client), "from fallback")
         self.assertEqual(calls, ["main-model", "backup-model"])
 
@@ -106,7 +106,7 @@ class AskGeminiTest(unittest.TestCase):
             return response("from " + kwargs["model"])
 
         client = SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
-        with mock.patch.dict("os.environ", {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODEL": "backup-model"}):
+        with mock.patch.dict("os.environ", {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODELS": "backup-model"}):
             started = time.monotonic()
             self.assertEqual(ask_gemini("x", "en-US", client=client, timeout_s=2.0), "from backup-model")
         self.assertLess(time.monotonic() - started, 2.0)
@@ -122,7 +122,7 @@ class AskGeminiTest(unittest.TestCase):
             calls.append(kwargs["model"])
             raise errors.ClientError(400, {"error": {"message": "bad"}})
 
-        env = {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODEL": "backup-model"}
+        env = {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODELS": "backup-model"}
         for fn in (blocked, bad_request):
             calls.clear()
             client = SimpleNamespace(models=SimpleNamespace(generate_content=fn))
@@ -132,9 +132,21 @@ class AskGeminiTest(unittest.TestCase):
         calls.clear()
         client = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **k: (_ for _ in ()).throw(
             errors.ServerError(503, {"error": {"message": "m"}}))))
-        with mock.patch.dict("os.environ", {**env, "GEMINI_FALLBACK_MODEL": ""}), self.assertRaises(GeminiError) as ctx:
+        with mock.patch.dict("os.environ", {**env, "GEMINI_FALLBACK_MODELS": ""}), self.assertRaises(GeminiError) as ctx:
             ask_gemini("x", "en-US", client=client)
         self.assertEqual(ctx.exception.status, 503)
+
+    def test_default_chain_tries_three_models_in_order(self):
+        calls = []
+
+        def generate_content(**kwargs):
+            calls.append(kwargs["model"])
+            raise errors.ServerError(503, {"error": {"message": "m"}})
+
+        client = SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
+        with mock.patch.dict("os.environ", {}, clear=True), self.assertRaises(GeminiError):
+            ask_gemini("x", "en-US", client=client)
+        self.assertEqual(calls, ["gemini-3.6-flash", "gemini-3.1-flash-lite", "gemini-3.5-flash-lite"])
 
     def test_both_models_failing_raises_the_last_error(self):
         client = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **k: (_ for _ in ()).throw(

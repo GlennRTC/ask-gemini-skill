@@ -7,11 +7,13 @@ import httpx
 from google import genai
 from google.genai import errors, types
 
-DEFAULT_MODEL = "gemini-3.5-flash-lite"  # override with GEMINI_MODEL; older 2.5 models 404 for new users
-# Tried when the main model is overloaded (503), slow, rate-limited or missing; "" turns the fallback off.
-DEFAULT_FALLBACK_MODEL = "gemini-3.8-flash"
-# Share of the time budget the main model may use before the fallback gets its turn.
-PRIMARY_SHARE = 0.55
+DEFAULT_MODEL = "gemini-3.6-flash"  # override with GEMINI_MODEL; older 2.5 models 404 for new users
+# Tried in order when the previous model is overloaded (503), slow, rate-limited or missing.
+# Override with GEMINI_FALLBACK_MODELS (comma separated; empty turns the fallback off). Chosen from a
+# live latency test on 2026-10-22: gemini-3.8-flash answered 503 and gemini-4-argon had no free quota.
+DEFAULT_FALLBACK_MODELS = ("gemini-3.1-flash-lite", "gemini-3.5-flash-lite")
+# Share of the time still left that each model except the last may use.
+PRIMARY_SHARE = 0.5
 MIN_ATTEMPT_S = 0.5
 _FALLBACK_STATUSES = {None, 404, 429, 500, 503, 504}
 # Alexa cuts the request at about 8 s; a cold start can take ~2 s before this call, so give up at 4.5 s.
@@ -95,9 +97,9 @@ def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEO
     )
     contents = _contents(query, history)
     models = [os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)]
-    fallback = os.environ.get("GEMINI_FALLBACK_MODEL", DEFAULT_FALLBACK_MODEL)
-    if fallback and fallback != models[0]:
-        models.append(fallback)
+    raw_fallbacks = os.environ.get("GEMINI_FALLBACK_MODELS")
+    fallbacks = DEFAULT_FALLBACK_MODELS if raw_fallbacks is None else [m.strip() for m in raw_fallbacks.split(",")]
+    models += [m for m in fallbacks if m and m not in models]
 
     started = time.monotonic()
     last_error = None
