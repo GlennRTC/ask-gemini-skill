@@ -83,6 +83,66 @@ class AskGeminiTest(unittest.TestCase):
         self.assertEqual(ctx.exception.kind, "timeout")
         self.assertLess(time.monotonic() - started, 0.3)
 
+    def test_falls_back_to_the_second_model_on_503(self):
+        calls = []
+
+        def generate_content(**kwargs):
+            calls.append(kwargs["model"])
+            if len(calls) == 1:
+                raise errors.ServerError(503, {"error": {"message": "overloaded"}})
+            return response("from fallback")
+
+        client = SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
+        with mock.patch.dict("os.environ", {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODEL": "backup-model"}):
+            self.assertEqual(ask_gemini("x", "en-US", client=client), "from fallback")
+        self.assertEqual(calls, ["main-model", "backup-model"])
+
+    def test_slow_main_model_leaves_time_for_the_fallback(self):
+        import time
+
+        def generate_content(**kwargs):
+            if kwargs["model"] == "main-model":
+                time.sleep(2.0)
+            return response("from " + kwargs["model"])
+
+        client = SimpleNamespace(models=SimpleNamespace(generate_content=generate_content))
+        with mock.patch.dict("os.environ", {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODEL": "backup-model"}):
+            started = time.monotonic()
+            self.assertEqual(ask_gemini("x", "en-US", client=client, timeout_s=2.0), "from backup-model")
+        self.assertLess(time.monotonic() - started, 2.0)
+
+    def test_no_fallback_for_blocked_bad_requests_or_when_disabled(self):
+        calls = []
+
+        def blocked(**kwargs):
+            calls.append(kwargs["model"])
+            return response(None, block_reason="SAFETY")
+
+        def bad_request(**kwargs):
+            calls.append(kwargs["model"])
+            raise errors.ClientError(400, {"error": {"message": "bad"}})
+
+        env = {"GEMINI_MODEL": "main-model", "GEMINI_FALLBACK_MODEL": "backup-model"}
+        for fn in (blocked, bad_request):
+            calls.clear()
+            client = SimpleNamespace(models=SimpleNamespace(generate_content=fn))
+            with mock.patch.dict("os.environ", env), self.assertRaises(GeminiError):
+                ask_gemini("x", "en-US", client=client)
+            self.assertEqual(calls, ["main-model"])
+        calls.clear()
+        client = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **k: (_ for _ in ()).throw(
+            errors.ServerError(503, {"error": {"message": "m"}}))))
+        with mock.patch.dict("os.environ", {**env, "GEMINI_FALLBACK_MODEL": ""}), self.assertRaises(GeminiError) as ctx:
+            ask_gemini("x", "en-US", client=client)
+        self.assertEqual(ctx.exception.status, 503)
+
+    def test_both_models_failing_raises_the_last_error(self):
+        client = SimpleNamespace(models=SimpleNamespace(generate_content=lambda **k: (_ for _ in ()).throw(
+            errors.ServerError(503, {"error": {"message": "m"}}))))
+        with self.assertRaises(GeminiError) as ctx:
+            ask_gemini("x", "en-US", client=client)
+        self.assertEqual((ctx.exception.kind, ctx.exception.status), ("api", 503))
+
     def test_quota_and_api_errors(self):
         for code, kind in ((429, "quota"), (400, "api")):
             with self.subTest(code=code):

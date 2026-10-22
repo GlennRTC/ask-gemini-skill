@@ -1,4 +1,6 @@
+import logging
 import os
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 import httpx
@@ -6,6 +8,12 @@ from google import genai
 from google.genai import errors, types
 
 DEFAULT_MODEL = "gemini-3.5-flash-lite"  # override with GEMINI_MODEL; older 2.5 models 404 for new users
+# Tried when the main model is overloaded (503), slow, rate-limited or missing; "" turns the fallback off.
+DEFAULT_FALLBACK_MODEL = "gemini-3.8-flash"
+# Share of the time budget the main model may use before the fallback gets its turn.
+PRIMARY_SHARE = 0.55
+MIN_ATTEMPT_S = 0.5
+_FALLBACK_STATUSES = {None, 404, 429, 500, 503, 504}
 # Alexa cuts the request at about 8 s; a cold start can take ~2 s before this call, so give up at 4.5 s.
 DEFAULT_TIMEOUT_S = 4.5
 MAX_ANSWER_WORDS = 60
@@ -28,6 +36,9 @@ SYSTEM_PROMPTS = {
     "en": f"You are a voice assistant. Always answer in English, clearly and briefly "
           f"(at most {MAX_ANSWER_WORDS} words), with no markdown, lists or links.",
 }
+
+
+logger = logging.getLogger(__name__)
 
 
 class GeminiError(Exception):
@@ -82,15 +93,36 @@ def ask_gemini(query, locale, api_key=None, client=None, timeout_s=DEFAULT_TIMEO
         system_instruction=instruction, max_output_tokens=MAX_OUTPUT_TOKENS,
         safety_settings=SAFETY_SETTINGS,
     )
+    contents = _contents(query, history)
+    models = [os.environ.get("GEMINI_MODEL", DEFAULT_MODEL)]
+    fallback = os.environ.get("GEMINI_FALLBACK_MODEL", DEFAULT_FALLBACK_MODEL)
+    if fallback and fallback != models[0]:
+        models.append(fallback)
+
+    started = time.monotonic()
+    last_error = None
+    for index, model in enumerate(models):
+        remaining = timeout_s - (time.monotonic() - started)
+        budget = remaining * PRIMARY_SHARE if index < len(models) - 1 else remaining
+        if index > 0 and budget < MIN_ATTEMPT_S:
+            break
+        try:
+            return _generate(client, model, contents, config, budget)
+        except GeminiError as exc:
+            last_error = exc
+            if exc.kind in ("blocked",) or (exc.kind == "api" and exc.status not in _FALLBACK_STATUSES):
+                raise
+            logger.warning("gemini_attempt_failed model_index=%d kind=%s status=%s", index, exc.kind, exc.status)
+    raise last_error or GeminiError("timeout")
+
+
+def _generate(client, model, contents, config, budget_s):
     # httpx timeouts apply per phase, not to the whole call, and a stalled call once ran into the
     # Lambda limit; so the call also gets a hard wall-clock deadline in a worker thread.
     executor = ThreadPoolExecutor(max_workers=1)
     try:
-        future = executor.submit(
-            client.models.generate_content,
-            model=os.environ.get("GEMINI_MODEL", DEFAULT_MODEL), contents=_contents(query, history), config=config,
-        )
-        response = future.result(timeout=timeout_s)
+        future = executor.submit(client.models.generate_content, model=model, contents=contents, config=config)
+        response = future.result(timeout=budget_s)
     except (httpx.TimeoutException, TimeoutError):
         raise GeminiError("timeout") from None
     except errors.ClientError as exc:
